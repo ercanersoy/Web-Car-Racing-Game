@@ -4,7 +4,7 @@
 const UI = (() => {
   const SEL_KEY = 'wcrg.newgame.v1';
   const REC_KEY = 'wcrg.records.v1';
-  const VERSION = '1.2.0';
+  const VERSION = '1.3.0';
   const screens = ['main', 'new', 'settings', 'about', 'pause', 'results'];
   let current = 'main';
   let settingsBack = 'main';
@@ -67,10 +67,23 @@ const UI = (() => {
     });
   }
 
+  /* Ana menüdeki ve ayarlardaki tema seçicileri */
+  function fillThemeSelects() {
+    document.querySelectorAll('.theme-select').forEach(el => {
+      if (!el.dataset.bound) {
+        el.dataset.bound = '1';
+        // ayarlar ekranındaki seçici SET_KEYS ile bağlıdır; ana menüdekini burada bağla
+        if (el.id !== 's-uiTheme') el.addEventListener('change', () => Settings.set('uiTheme', el.value));
+      }
+      el.value = Settings.get('uiTheme');
+    });
+  }
+
   /* Dil değişince statik metinleri ve açık ekranın dinamik içeriğini yenile */
   function relocalize() {
     I18N.apply();
     fillLangSelects();
+    fillThemeSelects();
     U.$('about-version').textContent = t('about.version', { v: VERSION });
     for (const kind in mapCards) {
       if (mapCards[kind]) mapCards[kind].forEach((card, i) => localizeMapCard(card, kind, i));
@@ -210,11 +223,12 @@ const UI = (() => {
     // küçük resimleri parça parça üret (arayüz donmasın)
     let i = 0;
     const step = () => {
-      const end = Math.min(cards.length, i + 3);
-      for (; i < end; i++) {
+      const t0 = performance.now();
+      while (i < cards.length && performance.now() - t0 < 12) {
         Render.thumbnail(cards[i].querySelector('canvas'), Tracks.getBasic(kind, i));
         cards[i].dataset.ready = '1';
         localizeMapCard(cards[i], kind, i);
+        i++;
       }
       if (i < cards.length) setTimeout(step, 0);
     };
@@ -258,7 +272,7 @@ const UI = (() => {
   }
 
   /* ---------- ayarlar ---------- */
-  const SET_KEYS = ['playerName', 'music', 'musicVolume', 'sfx', 'sfxVolume', 'engineSound', 'quality', 'fpsLimit', 'showFps',
+  const SET_KEYS = ['playerName', 'uiTheme', 'music', 'musicVolume', 'sfx', 'sfxVolume', 'engineSound', 'quality', 'fpsLimit', 'showFps',
     'camera', 'units', 'speedo', 'mirror', 'minimap', 'standings', 'touch'];
 
   function fillSettings() {
@@ -270,6 +284,7 @@ const UI = (() => {
       else if (el !== document.activeElement) el.value = String(v);
     });
     fillLangSelects();
+    fillThemeSelects();
   }
 
   function bindSettings() {
@@ -335,7 +350,7 @@ const UI = (() => {
   }
 
   return {
-    init, show, hideAll, openSettings, startOptions, showResults, saveRecord, relocalize,
+    init, show, hideAll, openSettings, startOptions, showResults, saveRecord, relocalize, fillThemeSelects,
     get current() { return current; }
   };
 })();

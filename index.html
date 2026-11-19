@@ -7,6 +7,14 @@
   <meta name="theme-color" content="#1b1f24">
   <title>Web Car Racing Game</title>
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* Tema ilk çizimden önce uygulanır (açılışta yanlış renk görünmesin) */
+    try {
+      var th = (JSON.parse(localStorage.getItem('wcrg.settings.v1') || '{}') || {}).uiTheme;
+      if (th !== 'light' && th !== 'dark') th = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', th);
+    } catch (e) { /* depolama yok: koyu tema */ }
+  </script>
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -32,7 +40,7 @@
     <div id="hud-msg"></div>
     <div id="hud-wrong" class="hidden" data-i18n="hud.wrong"></div>
     <div id="hud-fps" class="hidden"></div>
-    <button id="btn-pause" class="hud-btn" data-i18n-attr="aria-label:hud.pause;title:hud.pause">&#10074;&#10074;</button>
+    <button id="btn-pause" class="hud-btn" tabindex="-1" data-i18n-attr="aria-label:hud.pause;title:hud.pause">&#10074;&#10074;</button>
     <div id="touch" class="hidden">
       <div class="t-left">
         <button data-t="left" data-i18n-attr="aria-label:touch.left">&#9664;</button>
@@ -55,9 +63,15 @@
         <button class="btn" data-go="settings" data-i18n="menu.settings"></button>
         <button class="btn" data-go="about" data-i18n="menu.about"></button>
       </nav>
-      <div class="lang-row">
+      <div class="pref-rows">
         <label for="main-lang" data-i18n="menu.language"></label>
         <select id="main-lang" class="lang-select"></select>
+        <label for="main-theme" data-i18n="set.uiTheme"></label>
+        <select id="main-theme" class="theme-select">
+          <option value="auto" data-i18n="ui.auto"></option>
+          <option value="light" data-i18n="ui.light"></option>
+          <option value="dark" data-i18n="ui.dark"></option>
+        </select>
       </div>
       <p class="hint" data-i18n="menu.hint"></p>
       <p class="copy-line">&copy; 2026 Ercan Ersoy</p>
@@ -138,6 +152,12 @@
           <div class="set-row"><label for="s-engineSound" data-i18n="set.engineSound"></label><input type="checkbox" id="s-engineSound"></div>
 
           <h3 data-i18n="set.display"></h3>
+          <div class="set-row"><label for="s-uiTheme" data-i18n="set.uiTheme"></label>
+            <select id="s-uiTheme" class="theme-select">
+              <option value="auto" data-i18n="ui.auto"></option>
+              <option value="light" data-i18n="ui.light"></option>
+              <option value="dark" data-i18n="ui.dark"></option>
+            </select></div>
           <div class="set-row"><label for="s-quality" data-i18n="set.quality"></label>
             <select id="s-quality">
               <option value="low" data-i18n="set.quality.low"></option>
@@ -264,6 +284,7 @@
   <script src="js/util.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/cars.js"></script>
   <script src="js/tracks.js"></script>
   <script src="js/race.js"></script>

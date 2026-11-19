@@ -6,6 +6,7 @@ const Settings = (() => {
   const defaults = {
     lang: '',               // '' = ilk açılışta tarayıcı dilinden belirlenir (tr | en-US | en-GB)
     playerName: '',         // '' = dile göre varsayılan ad ("Sen" / "You")
+    uiTheme: 'auto',        // auto (sistem) | light | dark
     music: true,
     musicVolume: 0.5,
     sfx: true,

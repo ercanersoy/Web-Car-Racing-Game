@@ -18,6 +18,8 @@ const Game = (() => {
       if (Settings.firstRun && Settings.get('lang') === 'en-US') Settings.set('units', 'mph');
     }
     canvas = U.$('game');
+    // tema değişince göstergeler yeniden çizilsin (sistem teması değişince de)
+    Theme.onChange(() => { Hud.applySettings(); if (race && !running) draw(0); });
     ctx = canvas.getContext('2d', { alpha: false });
     Input.init();
     Hud.init();
@@ -53,6 +55,7 @@ const Game = (() => {
 
     Settings.onChange(k => {
       Sound.apply();
+      if (k === 'uiTheme' || k === null) { Theme.apply(); UI.fillThemeSelects(); }
       if (k === 'lang' || k === null) UI.relocalize();
       Hud.applySettings();
       if (k === 'quality' || k === null) {
@@ -77,7 +80,10 @@ const Game = (() => {
     U.$('btn-quit').onclick = () => { Sound.click(); quit(); };
     U.$('btn-res-again').onclick = () => { Sound.click(); start(opts); };
     U.$('btn-res-menu').onclick = () => { Sound.click(); quit(); };
-    U.$('btn-pause').onclick = () => { if (running && !paused && race && race.state !== 'done') pause(); };
+    U.$('btn-pause').onclick = e => {
+      e.currentTarget.blur();
+      if (running && !paused && race && race.state !== 'done') pause();
+    };
   }
 
   function resize() {
@@ -93,7 +99,7 @@ const Game = (() => {
   }
 
   function start(o) {
-    opts = Object.assign({}, o, { effects: effectsLevel() });
+    opts = Object.assign({}, o, { effects: effectsLevel(), playerName: Settings.get('playerName') || '' });
     stopLoop();
     Sound.stopMusic();
     Sound.engineStop();
@@ -113,7 +119,8 @@ const Game = (() => {
         else if (car.lapsDone < race.laps) Hud.message(T('hud.lapN', { n: car.lapsDone + 1 }) + (isBest ? T('hud.bestLapTag') : ''), 1.4, true);
       },
       onPlayerFinish: car => {
-        Hud.message(race.cars.length > 1 ? T('hud.finishedPos', { p: I18N.ordinal(car.rank) }) : T('hud.finish'), 3.5, true);
+        const pos = race.finishOrder.indexOf(car) + 1;   // aynı adımda geçilen araçlar da doğru sayılır
+        Hud.message(race.cars.length > 1 ? T('hud.finishedPos', { p: I18N.ordinal(pos) }) : T('hud.finish'), 3.5, true);
         Sound.beep(660, 0.15, 'square', 0.2);
         setTimeout(() => Sound.beep(990, 0.4, 'square', 0.2), 160);
       },

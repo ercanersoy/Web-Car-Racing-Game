@@ -12,7 +12,13 @@ const Input = (() => {
 
   function init() {
     window.addEventListener('keydown', e => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+      // Metin kutusu ya da açılır liste odaktayken yazılan tuşlar oyuna gitmez; Esc yine de geri döner
+      const tg = e.target, tag = tg && tg.tagName;
+      const typing = (tag === 'INPUT' && tg.type === 'text') || tag === 'SELECT' || tag === 'TEXTAREA';
+      if (typing) {
+        if (e.code === 'Escape' && !e.repeat && handlers.pause) { tg.blur(); handlers.pause('Escape'); }
+        return;
+      }
       keys[e.code] = true;
       if (GAME_KEYS.includes(e.code) && handlers.active && handlers.active()) e.preventDefault();
       if (e.repeat) return;

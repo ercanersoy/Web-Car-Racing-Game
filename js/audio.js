@@ -5,9 +5,10 @@ const Sound = (() => {
   let ac = null, master, musicBus, sfxBus, noiseBuf;
   let engine = null, skid = null;
   let lastHit = 0;
+  let held = false;   // oyun duraklatıldı: ses bilerek askıya alındı
 
   function ensure() {
-    if (ac) { if (ac.state === 'suspended') ac.resume(); return ac; }
+    if (ac) { if (ac.state === 'suspended' && !held) ac.resume(); return ac; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     ac = new AC();
@@ -31,14 +32,14 @@ const Sound = (() => {
     sfxBus.gain.value = Settings.get('sfx') ? Settings.get('sfxVolume') : 0;
   }
 
-  function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
-  function resume() { if (ac && ac.state === 'suspended') ac.resume(); }
+  function suspend() { held = true; if (ac && ac.state === 'running') ac.suspend(); }
+  function resume() { held = false; if (ac && ac.state === 'suspended') ac.resume(); }
 
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
   /* ---------- ses efektleri ---------- */
   function beep(freq, dur, type, vol) {
-    if (!ensure()) return;
+    if (held || !ensure()) return;
     const t = ac.currentTime;
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = type || 'square'; o.frequency.value = freq;
