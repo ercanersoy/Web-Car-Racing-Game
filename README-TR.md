@@ -19,11 +19,12 @@ HTML, CSS ve saf JavaScript ile yazılmıştır; **hiçbir ek kütüphane veya �
 - **25 tur pisti**, 5 temada: çayır, çöl, kar (düşük tutuş), sonbahar, gece (far ışıkları)
 - **25 kısa yarış yolu:** başlangıç ve bitiş noktaları ayrı, tek yönlü yollar (aynı 5 tema)
 - **Yarış türleri:** tur yarışı ve kısa yarış
-- **Göz yormayan tasarım:** doygunluğu düşük renkler, saf beyaz/siyah ve neon renk yok, hızla kayan sık desenler yok, yumuşak kamera dönüşü; tüm görseller kuşbakışı ve gölgeler sabit ışık yönünde
+- **Göz yormayan tasarım:** doygunluğu düşük renkler, saf beyaz/siyah ve neon renk yok, hızla kayan sık desenler yok, yumuşak kamera dönüşü; tüm görseller kuşbakışı ve gölgeler sabit ışık yönünde; binalar yola paralel, hiçbir nesne pistin önüne geçmez
+- **Açık ve koyu arayüz modu:** Otomatik (sistem teması), Açık veya Koyu; ana menüden ya da ayarlardan seçilir
 - **Yazılımla üretilen müzik:** Web Audio API ile her haritaya özgü, gerçek zamanlı bestelenen parçalar; menü müziği; motor, kayma, çarpışma ve geri sayım sesleri
 - **Gösterge paneli:** analog/dijital hız göstergesi ve vites, dikiz aynası, mini harita, canlı sıralama, tur süreleri, ters yön uyarısı
 - **Skor tablosu:** yarış sonunda sıra, süre, fark, en iyi tur ve puan; yerel rekorlar (localStorage)
-- **Ayarlar:** müzik/efekt/motor sesi, grafik kalitesi, kare hızı sınırı, kamera (dönen/sabit), hız birimi (km/sa, mil/sa), ayna/mini harita/sıralama göster-gizle, dokunmatik kontroller, FPS göstergesi, oyuncu adı
+- **Ayarlar:** müzik/efekt/motor sesi, grafik kalitesi, kare hızı sınırı, kamera (dönen/sabit), hız birimi (km/sa, mil/sa), ayna/mini harita/sıralama göster-gizle, arayüz teması (otomatik/açık/koyu), dokunmatik kontroller, FPS göstergesi, oyuncu adı
 - **Kontroller:** klavye, oyun kolu ve dokunmatik ekran
 
 ## Kontroller
@@ -55,6 +56,7 @@ css/style.css     Arayüz stilleri
 js/util.js        Yardımcı fonksiyonlar
 js/settings.js    Ayarlar
 js/i18n.js        Çeviriler (tr, en-US, en-GB)
+js/theme.js       Açık / koyu arayüz modu
 js/cars.js        Otomobil modelleri, renkler, sprite'lar
 js/tracks.js      25 tur pisti ve 25 kısa yarış yolunun tanımı ve üretimi
 js/race.js        Yarış mantığı, fizik, yapay zekâ

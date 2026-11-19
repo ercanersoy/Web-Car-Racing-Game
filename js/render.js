@@ -222,6 +222,27 @@ const Render = (() => {
       ctx.fill();
     }
 
+    // çevre nesneleri: pistten ÖNCE çizilir; böylece bina, ağaç, gölge ya da lamba ışığı
+    // hiçbir zaman pistin, bariyerin veya araçların önüne geçmez (önce gölgeler, sonra gövdeler)
+    if (!(opts.mirror && q === 'low')) {
+      const items = [];
+      for (const s of t.scenery) {
+        const dx = s.x - cam.x, dy = s.y - cam.y;
+        if (dx * dx + dy * dy <= vr2) items.push(s);
+      }
+      for (let pass = 0; pass < 2; pass++) {
+        for (const s of items) {
+          const spr = scenerySprites(s.type)[pass === 0 ? 1 : 0];
+          if (!spr) continue;
+          const size = 48 * s.s;
+          const ox = pass === 0 ? SHADOW_X * s.s : 0, oy = pass === 0 ? SHADOW_Y * s.s : 0;
+          ctx.save();
+          ctx.translate(s.x + ox, s.y + oy); ctx.rotate(s.rot);
+          ctx.drawImage(spr, -size, -size, size * 2, size * 2);
+          ctx.restore();
+        }
+      }
+    }
     ctx.lineJoin = 'round';
     // bariyerler (kesik çizgi yok: hızla kayan sık desen göz yorar)
     ctx.lineCap = 'round';
@@ -315,26 +336,6 @@ const Render = (() => {
       ctx.restore();
     }
 
-    // çevre nesneleri: önce gölgeler, sonra gövdeler
-    if (!(opts.mirror && q === 'low')) {
-      const items = [];
-      for (const s of t.scenery) {
-        const dx = s.x - cam.x, dy = s.y - cam.y;
-        if (dx * dx + dy * dy <= vr2) items.push(s);
-      }
-      for (let pass = 0; pass < 2; pass++) {
-        for (const s of items) {
-          const spr = scenerySprites(s.type)[pass === 0 ? 1 : 0];
-          if (!spr) continue;
-          const size = 48 * s.s;
-          const ox = pass === 0 ? SHADOW_X * s.s : 0, oy = pass === 0 ? SHADOW_Y * s.s : 0;
-          ctx.save();
-          ctx.translate(s.x + ox, s.y + oy); ctx.rotate(s.rot);
-          ctx.drawImage(spr, -size, -size, size * 2, size * 2);
-          ctx.restore();
-        }
-      }
-    }
     ctx.restore();
   }
 
@@ -369,13 +370,13 @@ const Render = (() => {
   }
 
   /* Mini harita arka planı (bir kez çizilir) */
-  function minimapBase(t, size) {
+  function minimapBase(t, size, outer, inner) {
     const c = U.makeCanvas(size, size), x = c.getContext('2d');
     const f = fitTransform(t, size, size, 12 * size / 150);
     x.lineJoin = 'round'; x.lineCap = 'round';
     tracePath(x, t, f, 3);
-    x.strokeStyle = 'rgba(0,0,0,0.5)'; x.lineWidth = 7 * size / 150; x.stroke();
-    x.strokeStyle = '#cfd2d4'; x.lineWidth = 3 * size / 150; x.stroke();
+    x.strokeStyle = outer || 'rgba(0,0,0,0.5)'; x.lineWidth = 7 * size / 150; x.stroke();
+    x.strokeStyle = inner || '#cfd2d4'; x.lineWidth = 3 * size / 150; x.stroke();
     markers(x, t, f, 3.5 * size / 150);
     return { canvas: c, s: f.s, ox: f.ox, oy: f.oy };
   }

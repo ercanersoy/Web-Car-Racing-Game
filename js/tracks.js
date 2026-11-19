@@ -359,6 +359,18 @@ const Tracks = (() => {
     rock: 21, snowrock: 21, cactus: 19, pine: 30, snowman: 16, hay: 18, building: 51, lamp: 6
   };
 
+  /* Açık yolun başlangıç ve bitiş uçlarının uzantısında, yol genişliği + pay kadar bir koridor */
+  function blocksRoadEnd(t, x, y, rad) {
+    const ends = [[0, t.heading[0] + Math.PI], [t.n - 1, t.heading[t.n - 1]]];
+    for (const [i, h] of ends) {
+      const dx = x - t.xs[i], dy = y - t.ys[i];
+      const fwd = dx * Math.cos(h) + dy * Math.sin(h);
+      const side = Math.abs(-dx * Math.sin(h) + dy * Math.cos(h));
+      if (fwd > -rad && fwd < 700 + rad && side < t.barrier + 40 + rad) return true;
+    }
+    return false;
+  }
+
   function makeScenery(t) {
     const grid = new Map();
     for (let j = 0; j < t.n; j++) {
@@ -401,6 +413,8 @@ const Tracks = (() => {
       const np = nearestPoint(t, x, y, grid);
       if (np.d < t.barrier + 18 + rad) continue;
       if (overlaps(x, y, rad)) continue;
+      // açık yolun uçlarının önü/arkası boş kalsın (yol bir nesnenin içine girmesin)
+      if (!t.closed && blocksRoadEnd(t, x, y, rad)) continue;
       // binalar en yakın yola paralel durur; yuvarlak nesnelerde açı yalnızca çeşitlilik içindir
       let rot = r() * U.TAU;
       if (type === 'building') {

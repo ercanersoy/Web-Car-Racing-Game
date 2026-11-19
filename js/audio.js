@@ -39,7 +39,7 @@ const Sound = (() => {
 
   /* ---------- ses efektleri ---------- */
   function beep(freq, dur, type, vol) {
-    if (!ensure()) return;
+    if (held || !ensure()) return;
     const t = ac.currentTime;
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = type || 'square'; o.frequency.value = freq;

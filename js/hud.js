@@ -10,6 +10,21 @@ const Hud = (() => {
   let mirrorFrame = 0;
   const cache = {};
 
+  /* Hız göstergesi ve mini harita renkleri: açık / koyu tema */
+  const PALETTE = {
+    dark: {
+      dialBg: 'rgba(27,31,36,0.72)', ring: '#3a414d', tick: '#c5cbd2', red: '#c4685a', num: '#98a2b0',
+      arc: 'rgba(214,180,90,0.75)', needle: '#d0705f', hub: '#d9dde2',
+      miniOuter: 'rgba(0,0,0,0.5)', miniInner: '#cfd2d4', dotMe: '#e4e5e0', dotOther: '#22262b'
+    },
+    light: {
+      dialBg: 'rgba(240,242,244,0.86)', ring: '#c5ccd4', tick: '#4a525d', red: '#b0574a', num: '#5c6571',
+      arc: 'rgba(181,142,52,0.8)', needle: '#b85a4a', hub: '#3a414c',
+      miniOuter: 'rgba(40,50,60,0.22)', miniInner: '#5a636e', dotMe: '#2b3038', dotOther: '#f0f2f4'
+    }
+  };
+  const pal = () => PALETTE[Theme.resolved()];
+
   function init() {
     els = {
       hud: U.$('hud'), pos: U.$('hud-pos'), lap: U.$('hud-lap'), lapLbl: U.$('hud-lap-lbl'),
@@ -84,10 +99,10 @@ const Hud = (() => {
   function drawDial(W, H, maxV) {
     const c = U.makeCanvas(W, H), x = c.getContext('2d');
     const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 4 * (W / 170);
-    const k = W / 170;
-    x.fillStyle = 'rgba(10,12,15,0.7)';
+    const k = W / 170, P = pal();
+    x.fillStyle = P.dialBg;
     x.beginPath(); x.arc(cx, cy, R, 0, U.TAU); x.fill();
-    x.strokeStyle = '#3a414d'; x.lineWidth = 2 * k; x.stroke();
+    x.strokeStyle = P.ring; x.lineWidth = 2 * k; x.stroke();
     const a0 = Math.PI * 0.75, a1 = Math.PI * 2.25;
     const step = maxV > 200 ? 20 : 10;
     x.font = 'bold ' + Math.round(10 * k) + 'px system-ui, sans-serif';
@@ -95,12 +110,12 @@ const Hud = (() => {
     for (let v = 0; v <= maxV; v += step / 2) {
       const a = a0 + (a1 - a0) * v / maxV, major = v % step === 0;
       const r1 = R - (major ? 12 : 7) * k, r2 = R - 3 * k;
-      x.strokeStyle = v > maxV * 0.8 ? '#c4685a' : '#c5cbd2';
+      x.strokeStyle = v > maxV * 0.8 ? P.red : P.tick;
       x.lineWidth = (major ? 2 : 1) * k;
       x.beginPath(); x.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
       x.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); x.stroke();
       if (major && (v / step) % 2 === 0) {
-        x.fillStyle = '#98a2b0';
+        x.fillStyle = P.num;
         x.fillText(String(v), cx + Math.cos(a) * (R - 24 * k), cy + Math.sin(a) * (R - 24 * k));
       }
     }
@@ -113,33 +128,34 @@ const Hud = (() => {
     const W = speedo.width, H = speedo.height;
     const mph = Settings.get('units') === 'mph';
     const maxV = mph ? 180 : 280;
-    const key = W + 'x' + H + mph;
+    const key = W + 'x' + H + mph + Theme.resolved();
     if (dialKey !== key) { dial = drawDial(W, H, maxV); dialKey = key; }
     sctx.clearRect(0, 0, W, H);
     sctx.drawImage(dial, 0, 0);
-    const k = W / 170, cx = W / 2, cy = H / 2;
+    const k = W / 170, cx = W / 2, cy = H / 2, P = pal();
     const v = Math.min(maxV, speedValue(car.vf));
     const a = Math.PI * 0.75 + Math.PI * 1.5 * v / maxV;
     // devir yayı
-    sctx.strokeStyle = 'rgba(214,180,90,0.75)'; sctx.lineWidth = 4 * k;
+    sctx.strokeStyle = P.arc; sctx.lineWidth = 4 * k;
     sctx.beginPath(); sctx.arc(cx, cy, W / 2 - 18 * k, Math.PI * 0.75, Math.PI * 0.75 + Math.PI * 1.5 * car.rpm * 0.999); sctx.stroke();
-    sctx.strokeStyle = '#d0705f'; sctx.lineWidth = 3 * k; sctx.lineCap = 'round';
+    sctx.strokeStyle = P.needle; sctx.lineWidth = 3 * k; sctx.lineCap = 'round';
     sctx.beginPath(); sctx.moveTo(cx - Math.cos(a) * 10 * k, cy - Math.sin(a) * 10 * k);
     sctx.lineTo(cx + Math.cos(a) * (W / 2 - 16 * k), cy + Math.sin(a) * (W / 2 - 16 * k)); sctx.stroke();
-    sctx.fillStyle = '#d9dde2'; sctx.beginPath(); sctx.arc(cx, cy, 5 * k, 0, U.TAU); sctx.fill();
+    sctx.fillStyle = P.hub; sctx.beginPath(); sctx.arc(cx, cy, 5 * k, 0, U.TAU); sctx.fill();
   }
 
   function drawMinimap() {
     if (!Settings.get('minimap')) return;
     const resized = fit(mini);
-    if (!miniBase || resized) miniBase = Render.minimapBase(race.track, mini.width);
+    const P = pal();
+    if (!miniBase || resized) miniBase = Render.minimapBase(race.track, mini.width, P.miniOuter, P.miniInner);
     miniCtx.clearRect(0, 0, mini.width, mini.height);
     miniCtx.drawImage(miniBase.canvas, 0, 0);
     const k = mini.width / 150;
     for (const c of race.cars) {
       const x = c.x * miniBase.s + miniBase.ox, y = c.y * miniBase.s + miniBase.oy;
       miniCtx.fillStyle = c.color;
-      miniCtx.strokeStyle = c.isPlayer ? '#e4e5e0' : '#22262b';
+      miniCtx.strokeStyle = c.isPlayer ? P.dotMe : P.dotOther;
       miniCtx.lineWidth = (c.isPlayer ? 2 : 1) * k;
       miniCtx.beginPath(); miniCtx.arc(x, y, (c.isPlayer ? 5 : 3.5) * k, 0, U.TAU);
       miniCtx.fill(); miniCtx.stroke();
