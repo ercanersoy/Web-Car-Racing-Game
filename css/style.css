@@ -1,4 +1,4 @@
-/* Turbo Pist - sade arayüz stilleri */
+/* Web Car Racing Game - sade arayüz stilleri */
 :root {
   --bg: #14171c;
   --panel: #1d2128;
@@ -14,6 +14,7 @@
 
 * { box-sizing: border-box; }
 html, body {
+  touch-action: manipulation;
   margin: 0; height: 100%; overflow: hidden;
   background: var(--bg); color: var(--text);
   font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
@@ -54,9 +55,11 @@ html, body {
 h3 { margin: 18px 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 h3 small { text-transform: none; letter-spacing: 0; color: var(--text); font-weight: 600; margin-left: 6px; }
 
-.logo { margin: 0; font-size: 46px; font-weight: 900; letter-spacing: .04em; font-style: italic; }
-.logo span { color: var(--accent); margin-left: 8px; }
-.logo.small { font-size: 32px; margin-top: 8px; }
+.logo { margin: 0; font-size: 42px; line-height: 1.05; font-weight: 900; letter-spacing: .03em; font-style: italic; }
+.logo span { display: block; color: var(--accent); }
+.logo.small { font-size: 28px; margin-top: 8px; }
+.lang-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+.lang-row select { min-width: 150px; padding: 5px 8px; }
 .subtitle { margin: 2px 0 26px; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; font-size: 12px; }
 .hint { margin: 22px 0 0; color: var(--muted); font-size: 12px; }
 .copy-line { margin: 8px 0 0; color: #6b7480; font-size: 11px; }
@@ -228,7 +231,7 @@ kbd {
 #touch .t-brake { background: rgba(232, 69, 44, 0.35); }
 
 @media (max-width: 760px) {
-  .logo { font-size: 36px; }
+  .logo { font-size: 32px; }
   #mirror { width: 180px; height: 50px; top: 64px; border-radius: 16px; }
   .hud-row { display: none; }
   .hud-btn { top: 64px; }

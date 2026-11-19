@@ -1,4 +1,4 @@
-/* Turbo Pist - oyun döngüsü ve akış kontrolü */
+/* Web Car Racing Game - oyun döngüsü ve akış kontrolü */
 'use strict';
 
 const Game = (() => {
@@ -12,6 +12,11 @@ const Game = (() => {
   let menuMusicOn = false;
 
   function init() {
+    // dil: ilk açılışta tarayıcı dilinden seç; ABD İngilizcesinde varsayılan birim mil/sa
+    if (!I18N.NAMES[Settings.get('lang')]) {
+      Settings.set('lang', I18N.detect());
+      if (Settings.firstRun && Settings.get('lang') === 'en-US') Settings.set('units', 'mph');
+    }
     canvas = U.$('game');
     ctx = canvas.getContext('2d', { alpha: false });
     Input.init();
@@ -27,25 +32,33 @@ const Game = (() => {
     });
 
     Input.on('active', () => running && !paused);
-    Input.on('pause', () => {
+    Input.on('pause', code => {
+      // menülerde Esc bir önceki ekrana döner
+      const cur = UI.current;
+      if (code !== 'Escape' && (cur === 'settings' || cur === 'new' || cur === 'about')) return;
+      if (cur === 'settings') { U.$('settings-back').click(); return; }
+      if (cur === 'new' || cur === 'about') { Sound.click(); UI.show('main'); return; }
       if (!race) return;
-      if (UI.current === 'settings') return;
       if (paused) resume(); else if (running && race.state !== 'done') pause();
     });
     Input.on('camera', () => {
       if (!running || paused) return;
       Settings.set('camera', Settings.get('camera') === 'rotate' ? 'fixed' : 'rotate');
-      Hud.message(Settings.get('camera') === 'rotate' ? 'Kamera: dönen' : 'Kamera: sabit', 1, true);
+      Hud.message(I18N.t(Settings.get('camera') === 'rotate' ? 'hud.camRotate' : 'hud.camFixed'), 1, true);
     });
     Input.on('music', () => {
       Settings.set('music', !Settings.get('music'));
-      if (running) Hud.message(Settings.get('music') ? 'Müzik açık' : 'Müzik kapalı', 1, true);
+      if (running) Hud.message(I18N.t(Settings.get('music') ? 'hud.musicOn' : 'hud.musicOff'), 1, true);
     });
 
     Settings.onChange(k => {
       Sound.apply();
+      if (k === 'lang' || k === null) UI.relocalize();
       Hud.applySettings();
-      if (k === 'quality' || k === null) resize();
+      if (k === 'quality' || k === null) {
+        resize();
+        if (race) race.setEffects(effectsLevel());
+      }
     });
 
     // menü müziği ilk kullanıcı etkileşiminde başlar (tarayıcı kuralı)
@@ -86,20 +99,21 @@ const Game = (() => {
     Sound.engineStop();
     menuMusicOn = false;
     Input.clear();
-    race = new Race(opts, {
+    const T = I18N.t;
+    const thisRace = race = new Race(opts, {
       onCountdown: n => {
         if (n > 0) { Hud.message(String(n), 1.2); Sound.beep(440, 0.25, 'square', 0.22); }
-        else { Hud.message('BAŞLA!', 1); Sound.beep(880, 0.5, 'square', 0.25); }
+        else { Hud.message(T('hud.go'), 1); Sound.beep(880, 0.5, 'square', 0.25); }
       },
       onHit: s => Sound.hit(s),
       onLap: car => {
         if (!car.isPlayer || race.mode !== 'laps') return;
         const isBest = car.lapTimes.length > 1 && car.lastLap === car.bestLap;
-        if (car.lapsDone === race.laps - 1) Hud.message('SON TUR!', 1.6, true);
-        else if (car.lapsDone < race.laps) Hud.message('TUR ' + (car.lapsDone + 1) + (isBest ? ' · EN İYİ TUR' : ''), 1.4, true);
+        if (car.lapsDone === race.laps - 1) Hud.message(T('hud.finalLap'), 1.6, true);
+        else if (car.lapsDone < race.laps) Hud.message(T('hud.lapN', { n: car.lapsDone + 1 }) + (isBest ? T('hud.bestLapTag') : ''), 1.4, true);
       },
       onPlayerFinish: car => {
-        Hud.message(race.cars.length > 1 ? car.rank + '. SIRADA BİTİRDİN!' : 'BİTİŞ!', 3.5, true);
+        Hud.message(race.cars.length > 1 ? T('hud.finishedPos', { p: I18N.ordinal(car.rank) }) : T('hud.finish'), 3.5, true);
         Sound.beep(660, 0.15, 'square', 0.2);
         setTimeout(() => Sound.beep(990, 0.4, 'square', 0.2), 160);
       },
@@ -108,6 +122,7 @@ const Game = (() => {
         const rec = UI.saveRecord(opts, me);
         Sound.engineStop();
         setTimeout(() => {
+          if (race !== thisRace) return;   // bu arada yeni yarış başlatıldı / menüye dönüldü
           running = false;
           stopLoop();
           Hud.stop();
@@ -135,6 +150,7 @@ const Game = (() => {
 
   function pause() {
     paused = true;
+    stopLoop();            // duraklatılmışken hiç kare çizilmez (kaynak tasarrufu)
     Input.clear();
     Sound.suspend();
     UI.show('pause');
@@ -144,7 +160,9 @@ const Game = (() => {
     UI.hideAll();
     Sound.resume();
     lastT = performance.now();
+    lastRender = 0;
     acc = 0;
+    if (!rafId) rafId = requestAnimationFrame(frame);
   }
   function quit() {
     running = false; paused = false;

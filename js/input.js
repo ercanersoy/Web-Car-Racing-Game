@@ -1,4 +1,4 @@
-/* Turbo Pist - klavye, oyun kolu ve dokunmatik giriş */
+/* Web Car Racing Game - klavye, oyun kolu ve dokunmatik giriş */
 'use strict';
 
 const Input = (() => {
@@ -16,7 +16,7 @@ const Input = (() => {
       keys[e.code] = true;
       if (GAME_KEYS.includes(e.code) && handlers.active && handlers.active()) e.preventDefault();
       if (e.repeat) return;
-      if ((e.code === 'Escape' || e.code === 'KeyP') && handlers.pause) handlers.pause();
+      if ((e.code === 'Escape' || e.code === 'KeyP') && handlers.pause) handlers.pause(e.code);
       if (e.code === 'KeyC' && handlers.camera) handlers.camera();
       if (e.code === 'KeyM' && handlers.music) handlers.music();
     });
@@ -55,12 +55,13 @@ const Input = (() => {
       if (Math.abs(ax) > 0.15) { target = ax; analog = true; }
       const rt = p.buttons[7] ? p.buttons[7].value : 0;
       const lt = p.buttons[6] ? p.buttons[6].value : 0;
-      if (rt > 0.05 || (p.buttons[0] && p.buttons[0].pressed)) throttle = Math.max(throttle, rt || 1);
-      if (lt > 0.05 || (p.buttons[1] && p.buttons[1].pressed)) brake = Math.max(brake, lt || 1);
+      const aBtn = p.buttons[0] && p.buttons[0].pressed, bBtn = p.buttons[1] && p.buttons[1].pressed;
+      throttle = Math.max(throttle, rt > 0.05 ? rt : 0, aBtn ? 1 : 0);
+      brake = Math.max(brake, lt > 0.05 ? lt : 0, bBtn ? 1 : 0);
       if (p.buttons[2] && p.buttons[2].pressed) hand = true;
       if (p.buttons[3] && p.buttons[3].pressed) reset = true;
       const start = p.buttons[9] && p.buttons[9].pressed;
-      if (start && !padPauseLatch && handlers.pause) handlers.pause();
+      if (start && !padPauseLatch && handlers.pause) handlers.pause('Start');
       padPauseLatch = start;
       break;
     }

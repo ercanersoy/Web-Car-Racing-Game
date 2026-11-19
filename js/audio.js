@@ -1,4 +1,4 @@
-/* Turbo Pist - Web Audio API ile yazılımsal müzik ve ses efektleri */
+/* Web Car Racing Game - Web Audio API ile yazılımsal müzik ve ses efektleri */
 'use strict';
 
 const Sound = (() => {

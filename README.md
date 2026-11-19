@@ -1,4 +1,4 @@
-# Turbo Pist — Web Araba Yarışı
+# Web Car Racing Game
 
 Tamamen tarayıcıda çalışan, tek oyunculu, kuşbakışı bir araba yarışı oyunu.
 HTML, CSS ve saf JavaScript ile yazılmıştır; **hiçbir ek kütüphane veya çatı kullanılmaz**, sunucu gerekmez.
@@ -12,7 +12,9 @@ HTML, CSS ve saf JavaScript ile yazılmıştır; **hiçbir ek kütüphane veya �
 
 - **Menü:** Yeni Oyun, Ayarlar, Hakkında
 - **Yeni oyun seçenekleri:** yarış türü, tur sayısı (1–10), araba sayısı (1–8, siz dahil), rakip zorluğu, otomobil, renk, harita
-- **5 otomobil:** Rüzgar GT (dengeli), Şimşek RS (yüksek hız), Kartal Sport (yol tutuş), Tank X4 (dayanıklı / arazi), Çita Mini (hızlanma)
+- **5 otomobil:** Model 1 (dengeli), Model 2 (yüksek hız), Model 3 (yol tutuş), Model 4 (dayanıklı / arazi), Model 5 (hızlanma)
+- **Bilgisayar rakipler:** Oyuncu 1, Oyuncu 2, … (İngilizcede Player 1, Player 2, …)
+- **Diller:** Türkçe, Amerikan İngilizcesi (en-US) ve İngiliz İngilizcesi (en-GB); ilk açılışta tarayıcı dili seçilir, ana menüden veya ayarlardan değiştirilebilir
 - **8 renk** seçeneği
 - **25 harita**, 5 temada: çayır, çöl, kar (düşük tutuş), sonbahar, gece (far ışıkları)
 - **Yarış türleri:** tur yarışı ve kısa yarış (turun ~%70'i kadar sprint)
@@ -50,6 +52,7 @@ index.html        Sayfa ve menüler
 css/style.css     Arayüz stilleri
 js/util.js        Yardımcı fonksiyonlar
 js/settings.js    Ayarlar
+js/i18n.js        Çeviriler (tr, en-US, en-GB)
 js/cars.js        Otomobil modelleri, renkler, sprite'lar
 js/tracks.js      25 haritanın tanımı ve üretimi
 js/race.js        Yarış mantığı, fizik, yapay zekâ

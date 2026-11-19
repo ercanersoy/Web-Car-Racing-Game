@@ -1,48 +1,44 @@
-/* Turbo Pist - araç modelleri, renkler ve sprite üretimi */
+/* Web Car Racing Game - araç modelleri, renkler ve sprite üretimi */
 'use strict';
 
 const CAR_MODELS = [
   {
-    id: 'ruzgar', name: 'Rüzgar GT', tag: 'Dengeli',
-    desc: 'Her pistte güvenilir, dengeli bir spor coupe.',
+    id: 'ruzgar', name: 'Model 1',
     maxSpeed: 545, accel: 300, turn: 2.6, grip: 7.5, brake: 650, mass: 1.0, offroad: 0.55,
     len: 44, wid: 22, body: 'coupe'
   },
   {
-    id: 'simsek', name: 'Şimşek RS', tag: 'Yüksek hız',
-    desc: 'Uzun düzlüklerin kralı; virajlarda dikkat ister.',
+    id: 'simsek', name: 'Model 2',
     maxSpeed: 615, accel: 275, turn: 2.3, grip: 6.4, brake: 610, mass: 0.95, offroad: 0.5,
     len: 48, wid: 22, body: 'super'
   },
   {
-    id: 'kartal', name: 'Kartal Sport', tag: 'Yol tutuş',
-    desc: 'Keskin virajlarda rakipsiz yol tutuşu sunan roadster.',
+    id: 'kartal', name: 'Model 3',
     maxSpeed: 525, accel: 315, turn: 3.0, grip: 9.5, brake: 700, mass: 0.95, offroad: 0.55,
     len: 42, wid: 21, body: 'roadster'
   },
   {
-    id: 'tank', name: 'Tank X4', tag: 'Dayanıklı',
-    desc: 'Ağır ve sağlam arazi aracı; çarpışmalardan ve çimden az etkilenir.',
+    id: 'tank', name: 'Model 4',
     maxSpeed: 530, accel: 255, turn: 2.4, grip: 8.0, brake: 620, mass: 1.6, offroad: 0.8,
     len: 48, wid: 25, body: 'suv'
   },
   {
-    id: 'cita', name: 'Çita Mini', tag: 'Hızlanma',
-    desc: 'Hafif ve çevik; kalkışta herkesi geride bırakır.',
+    id: 'cita', name: 'Model 5',
     maxSpeed: 495, accel: 410, turn: 3.2, grip: 8.6, brake: 720, mass: 0.75, offroad: 0.6,
     len: 36, wid: 20, body: 'mini'
   }
 ];
 
+/* Renk adları i18n.js içinde: 'color.<id>' */
 const CAR_COLORS = [
-  { id: 'kirmizi', name: 'Kırmızı', hex: '#d7263d' },
-  { id: 'mavi', name: 'Mavi', hex: '#1f6fd1' },
-  { id: 'sari', name: 'Sarı', hex: '#f2c318' },
-  { id: 'yesil', name: 'Yeşil', hex: '#28a05a' },
-  { id: 'turuncu', name: 'Turuncu', hex: '#f07a1a' },
-  { id: 'mor', name: 'Mor', hex: '#7d45c8' },
-  { id: 'beyaz', name: 'Beyaz', hex: '#e9ecef' },
-  { id: 'siyah', name: 'Siyah', hex: '#2a2d33' }
+  { id: 'kirmizi', hex: '#d7263d' },
+  { id: 'mavi', hex: '#1f6fd1' },
+  { id: 'sari', hex: '#f2c318' },
+  { id: 'yesil', hex: '#28a05a' },
+  { id: 'turuncu', hex: '#f07a1a' },
+  { id: 'mor', hex: '#7d45c8' },
+  { id: 'beyaz', hex: '#e9ecef' },
+  { id: 'siyah', hex: '#2a2d33' }
 ];
 
 const Cars = (() => {
@@ -50,11 +46,11 @@ const Cars = (() => {
   function stats(m) {
     const s = (v, a, b) => Math.round(U.clamp((v - a) / (b - a), 0, 1) * 8 + 2);
     return [
-      ['Azami hız', s(m.maxSpeed, 470, 625)],
-      ['Hızlanma', s(m.accel, 240, 420)],
-      ['Yol tutuş', s(m.turn * m.grip, 13, 30)],
-      ['Dayanıklılık', s(m.mass, 0.7, 1.65)],
-      ['Arazi', s(m.offroad, 0.45, 0.82)]
+      [I18N.t('stat.speed'), s(m.maxSpeed, 470, 625)],
+      [I18N.t('stat.accel'), s(m.accel, 240, 420)],
+      [I18N.t('stat.handling'), s(m.turn * m.grip, 13, 30)],
+      [I18N.t('stat.durability'), s(m.mass, 0.7, 1.65)],
+      [I18N.t('stat.offroad'), s(m.offroad, 0.45, 0.82)]
     ];
   }
 

@@ -1,24 +1,80 @@
-/* Turbo Pist - menüler ve ekranlar */
+/* Web Car Racing Game - menüler ve ekranlar */
 'use strict';
 
 const UI = (() => {
-  const SEL_KEY = 'turbopist.newgame.v1';
-  const REC_KEY = 'turbopist.records.v1';
+  const SEL_KEY = 'wcrg.newgame.v1';
+  const REC_KEY = 'wcrg.records.v1';
+  const VERSION = '1.1.0';
   const screens = ['main', 'new', 'settings', 'about', 'pause', 'results'];
   let current = 'main';
   let settingsBack = 'main';
-  let sel = Object.assign({ mode: 'laps', laps: 3, cars: 6, difficulty: 'orta', model: 0, color: 0, track: 0 }, U.load(SEL_KEY, {}));
   let mapsBuilt = false;
+  let lastResults = null;
+  const sel = sanitize(U.load(SEL_KEY, {}));
+
+  /* Kayıtlı seçimler bozuk/eski olsa da geçerli değerlere zorla */
+  function sanitize(o) {
+    const d = { mode: 'laps', laps: 3, cars: 6, difficulty: 'orta', model: 0, color: 0, track: 0 };
+    const int = (v, a, b, def) => (Number.isInteger(v) && v >= a && v <= b) ? v : def;
+    return {
+      mode: o.mode === 'sprint' ? 'sprint' : 'laps',
+      laps: int(o.laps, 1, 10, d.laps),
+      cars: int(o.cars, 1, 8, d.cars),
+      difficulty: DIFFICULTIES[o.difficulty] ? o.difficulty : d.difficulty,
+      model: int(o.model, 0, CAR_MODELS.length - 1, d.model),
+      color: int(o.color, 0, CAR_COLORS.length - 1, d.color),
+      track: int(o.track, 0, TRACK_DEFS.length - 1, d.track)
+    };
+  }
+
+  const t = (k, p) => I18N.t(k, p);
+  const trackName = i => t('track.' + i);
 
   function show(name) {
     screens.forEach(s => U.$('scr-' + s).classList.toggle('hidden', s !== name));
     current = name;
     if (name === 'new') buildNewGame();
     if (name === 'settings') fillSettings();
-    const first = U.$('scr-' + name) && U.$('scr-' + name).querySelector('.btn.primary, .btn');
-    if (first && name !== 'settings') first.focus({ preventScroll: true });
+    // Sonuç ekranında otomatik odak yok: yarış biterken basılı tutulan Boşluk tuşu düğmeye tıklamasın
+    if (name !== 'settings' && name !== 'results') {
+      const scr = U.$('scr-' + name);
+      const first = scr.querySelector('.btn.primary') || scr.querySelector('.btn');
+      if (first) first.focus({ preventScroll: true });
+    }
   }
-  function hideAll() { screens.forEach(s => U.$('scr-' + s).classList.add('hidden')); current = null; }
+  function hideAll() {
+    screens.forEach(s => U.$('scr-' + s).classList.add('hidden'));
+    current = null;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  /* ---------- dil ---------- */
+  function fillLangSelects() {
+    document.querySelectorAll('.lang-select').forEach(selEl => {
+      if (!selEl.options.length) {
+        I18N.codes.forEach(code => {
+          const o = document.createElement('option');
+          o.value = code; o.textContent = I18N.NAMES[code];
+          selEl.appendChild(o);
+        });
+        selEl.addEventListener('change', () => Settings.set('lang', selEl.value));
+      }
+      selEl.value = I18N.lang();
+    });
+  }
+
+  /* Dil değişince statik metinleri ve açık ekranın dinamik içeriğini yenile */
+  function relocalize() {
+    I18N.apply();
+    fillLangSelects();
+    U.$('about-version').textContent = t('about.version', { v: VERSION });
+    if (mapsBuilt) {
+      Array.from(U.$('map-list').children).forEach((card, i) => localizeMapCard(card, i));
+    }
+    if (current === 'new') buildNewGame();
+    if (current === 'settings') fillSettings();
+    if (current === 'results' && lastResults) showResults(lastResults.results, lastResults.opts, lastResults.rec);
+  }
 
   /* ---------- rekorlar ---------- */
   function records() { return U.load(REC_KEY, {}); }
@@ -51,11 +107,10 @@ const UI = (() => {
   function saveSel() { U.save(SEL_KEY, sel); summary(); }
 
   function summary() {
-    const t = Tracks.getBasic(sel.track);
-    const mode = sel.mode === 'laps' ? sel.laps + ' tur' : 'Kısa yarış';
-    const cars = sel.cars === 1 ? 'tek başına' : sel.cars + ' araç';
-    U.$('sel-summary').textContent = t.name + ' · ' + mode + ' · ' + cars + ' · ' + CAR_MODELS[sel.model].name;
-    U.$('map-sel-name').textContent = '— ' + t.name;
+    const mode = sel.mode === 'laps' ? (sel.laps === 1 ? t('sum.lap1') : t('sum.laps', { n: sel.laps })) : t('mode.sprint');
+    const cars = sel.cars === 1 ? t('sum.solo') : t('sum.cars', { n: sel.cars });
+    U.$('sel-summary').textContent = trackName(sel.track) + ' · ' + mode + ' · ' + cars + ' · ' + CAR_MODELS[sel.model].name;
+    U.$('map-sel-name').textContent = '— ' + trackName(sel.track);
   }
 
   function buildNewGame() {
@@ -63,9 +118,13 @@ const UI = (() => {
     seg('opt-diff', sel.difficulty, v => { sel.difficulty = v; saveSel(); });
     const laps = U.$('opt-laps'), cars = U.$('opt-cars');
     laps.value = sel.laps; U.$('opt-laps-val').textContent = sel.laps;
-    cars.value = sel.cars; U.$('opt-cars-val').textContent = sel.cars;
+    cars.value = sel.cars;
     laps.oninput = () => { sel.laps = +laps.value; U.$('opt-laps-val').textContent = sel.laps; saveSel(); refreshRecords(); };
-    cars.oninput = () => { sel.cars = +cars.value; U.$('opt-cars-val').textContent = sel.cars + (sel.cars === 1 ? ' (zamana karşı)' : ''); saveSel(); };
+    cars.oninput = () => {
+      sel.cars = +cars.value;
+      U.$('opt-cars-val').textContent = sel.cars + (sel.cars === 1 ? ' ' + t('new.timeTrial') : '');
+      saveSel();
+    };
     cars.oninput();
     updateMode();
     buildCars();
@@ -76,9 +135,7 @@ const UI = (() => {
 
   function updateMode() {
     U.$('opt-laps-wrap').style.visibility = sel.mode === 'laps' ? 'visible' : 'hidden';
-    U.$('mode-desc').textContent = sel.mode === 'laps'
-      ? 'Seçilen tur sayısını ilk tamamlayan kazanır.'
-      : 'Başlangıçtan sarı-dama bitiş çizgisine (turun ~%70\'i) tek seferlik hızlı bir sprint.';
+    U.$('mode-desc').textContent = t(sel.mode === 'laps' ? 'mode.laps.desc' : 'mode.sprint.desc');
   }
 
   function buildCars() {
@@ -94,7 +151,8 @@ const UI = (() => {
       Cars.drawCar(x, m, CAR_COLORS[sel.color].hex);
       b.appendChild(cv);
       const info = document.createElement('div');
-      info.innerHTML = '<div class="name">' + m.name + '</div><div class="tag">' + m.tag + '</div><div class="desc">' + m.desc + '</div>' +
+      info.innerHTML = '<div class="name">' + m.name + '</div><div class="tag">' + t('car.' + i + '.tag') + '</div>' +
+        '<div class="desc">' + t('car.' + i + '.desc') + '</div>' +
         Cars.stats(m).map(s => '<div class="stat"><span>' + s[0] + '</span><span class="bar"><i style="width:' + s[1] * 10 + '%"></i></span></div>').join('');
       b.appendChild(info);
       b.onclick = () => { Sound.click(); sel.model = i; saveSel(); list.querySelectorAll('.car-card').forEach((c, j) => c.classList.toggle('on', j === i)); };
@@ -110,10 +168,20 @@ const UI = (() => {
       b.type = 'button';
       b.className = 'swatch' + (i === sel.color ? ' on' : '');
       b.style.background = c.hex;
-      b.title = c.name; b.setAttribute('aria-label', c.name);
+      const name = t('color.' + c.id);
+      b.title = name; b.setAttribute('aria-label', name);
       b.onclick = () => { Sound.click(); sel.color = i; saveSel(); buildColors(); buildCars(); };
       list.appendChild(b);
     });
+  }
+
+  function localizeMapCard(card, i) {
+    card.querySelector('.name').textContent = (i + 1) + '. ' + trackName(i);
+    card.querySelector('.theme').textContent = t('theme.' + TRACK_DEFS[i][1]);
+    if (card.dataset.ready) {
+      const tr = Tracks.getBasic(i);
+      card.querySelector('.diff').textContent = t('level.' + tr.difficulty) + ' · ' + (tr.length * 0.42 / 3600).toFixed(1) + ' km';
+    }
   }
 
   function buildMaps() {
@@ -124,11 +192,11 @@ const UI = (() => {
       for (let i = 0; i < Tracks.count; i++) {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'map-card'; b.dataset.i = i;
-        const cv = U.makeCanvas(160, 110);
-        b.appendChild(cv);
-        b.insertAdjacentHTML('beforeend', '<div class="name">' + (i + 1) + '. ' + TRACK_DEFS[i][0] + '</div>' +
-          '<div class="meta"><span>' + THEMES[TRACK_DEFS[i][1]].name + '</span><span class="diff"></span></div><div class="rec"></div>');
+        b.appendChild(U.makeCanvas(160, 110));
+        b.insertAdjacentHTML('beforeend', '<div class="name"></div>' +
+          '<div class="meta"><span class="theme"></span><span class="diff"></span></div><div class="rec"></div>');
         b.onclick = () => { Sound.click(); sel.track = i; saveSel(); markMap(); };
+        localizeMapCard(b, i);
         list.appendChild(b);
       }
       // küçük resimleri parça parça üret (arayüz donmasın)
@@ -136,9 +204,10 @@ const UI = (() => {
       const step = () => {
         const end = Math.min(Tracks.count, i + 3);
         for (; i < end; i++) {
-          const t = Tracks.getBasic(i), card = list.children[i];
-          Render.thumbnail(card.querySelector('canvas'), t);
-          card.querySelector('.diff').textContent = t.difficulty + ' · ' + (t.length * 0.42 / 3600).toFixed(1) + ' km';
+          const card = list.children[i];
+          Render.thumbnail(card.querySelector('canvas'), Tracks.getBasic(i));
+          card.dataset.ready = '1';
+          localizeMapCard(card, i);
         }
         if (i < Tracks.count) setTimeout(step, 0);
       };
@@ -149,27 +218,25 @@ const UI = (() => {
   }
 
   function markMap() {
-    const list = U.$('map-list');
-    Array.from(list.children).forEach((c, j) => c.classList.toggle('on', j === sel.track));
+    Array.from(U.$('map-list').children).forEach((c, j) => c.classList.toggle('on', j === sel.track));
     summary();
   }
 
   function refreshRecords() {
     const recs = records();
-    const list = U.$('map-list');
-    Array.from(list.children).forEach((c, i) => {
+    Array.from(U.$('map-list').children).forEach((c, i) => {
       const k = recKey({ trackIndex: i, mode: sel.mode, laps: sel.laps });
-      const parts = [];
-      if (recs[k]) parts.push('Rekor ' + U.fmtTime(recs[k]));
-      else if (recs['lap:' + i]) parts.push('En iyi tur ' + U.fmtTime(recs['lap:' + i]));
-      c.querySelector('.rec').textContent = parts.join('');
+      let txt = '';
+      if (recs[k]) txt = t('map.record', { t: U.fmtTime(recs[k]) });
+      else if (recs['lap:' + i]) txt = t('map.bestLap', { t: U.fmtTime(recs['lap:' + i]) });
+      c.querySelector('.rec').textContent = txt;
     });
   }
 
   function startOptions() {
     return {
       trackIndex: sel.track, mode: sel.mode, laps: sel.laps, modelIdx: sel.model, colorIdx: sel.color,
-      carCount: sel.cars, difficulty: sel.difficulty, playerName: Settings.get('playerName') || 'Oyuncu'
+      carCount: sel.cars, difficulty: sel.difficulty, playerName: Settings.get('playerName') || ''
     };
   }
 
@@ -183,8 +250,9 @@ const UI = (() => {
       if (!el) return;
       const v = Settings.get(k);
       if (el.type === 'checkbox') el.checked = !!v;
-      else el.value = String(v);
+      else if (el !== document.activeElement) el.value = String(v);
     });
+    fillLangSelects();
   }
 
   function bindSettings() {
@@ -197,7 +265,7 @@ const UI = (() => {
         if (el.type === 'checkbox') v = el.checked;
         else if (el.type === 'range') v = parseFloat(el.value);
         else if (k === 'fpsLimit') v = parseInt(el.value, 10);
-        else if (k === 'playerName') v = el.value.trim().slice(0, 14) || 'Oyuncu';
+        else if (k === 'playerName') v = el.value.trim().slice(0, 14);
         else v = el.value;
         Settings.set(k, v);
       });
@@ -205,7 +273,7 @@ const UI = (() => {
     U.$('settings-back').onclick = () => { Sound.click(); show(settingsBack); };
     U.$('btn-reset-settings').onclick = () => { Settings.reset(); fillSettings(); };
     U.$('btn-reset-records').onclick = () => {
-      if (confirm('Tüm yerel rekorlar silinsin mi?')) { U.save(REC_KEY, {}); refreshRecords(); }
+      if (confirm(t('set.confirmRecords'))) { U.save(REC_KEY, {}); refreshRecords(); }
     };
   }
 
@@ -213,26 +281,26 @@ const UI = (() => {
 
   /* ---------- sonuçlar ---------- */
   function showResults(results, opts, rec) {
-    const t = Tracks.getBasic(opts.trackIndex);
+    lastResults = { results, opts, rec };
     const me = results.find(r => r.isPlayer);
-    const mode = opts.mode === 'laps' ? opts.laps + ' tur' : 'Kısa yarış';
-    U.$('res-info').innerHTML = '<b>' + Hud.escapeHtml(t.name) + '</b> · ' + mode + ' · ' +
-      (results.length > 1 ? 'Sıralamanız: <b>' + me.rank + '. / ' + results.length + '</b>' : 'Zamana karşı');
+    const mode = opts.mode === 'laps' ? (opts.laps === 1 ? t('sum.lap1') : t('sum.laps', { n: opts.laps })) : t('mode.sprint');
+    U.$('res-info').innerHTML = '<b>' + Hud.escapeHtml(trackName(opts.trackIndex)) + '</b> · ' + mode + ' · ' +
+      (results.length > 1 ? t('res.yourPos', { p: me.rank, n: results.length }) : t('res.timeTrial'));
     U.$('res-body').innerHTML = results.map(r =>
       '<tr class="' + (r.isPlayer ? 'me' : '') + '">' +
       '<td class="' + (r.rank === 1 ? 'r1' : '') + '">' + r.rank + '</td>' +
-      '<td><span class="dot" style="background:' + r.color + '"></span>' + Hud.escapeHtml(r.name) + '</td>' +
+      '<td><span class="dot" style="background:' + r.color + '"></span>' + Hud.escapeHtml(Race.nameOf(r.car)) + '</td>' +
       '<td>' + r.model + '</td>' +
-      '<td>' + (r.time == null ? 'Bitiremedi' : (r.est ? '~' : '') + U.fmtTime(r.time)) + '</td>' +
+      '<td>' + (r.time == null ? t('res.dnf') : (r.est ? '~' : '') + U.fmtTime(r.time)) + '</td>' +
       '<td>' + (r.gap == null ? (r.rank === 1 ? '—' : '') : '+' + U.fmtTime(r.gap)) + '</td>' +
       '<td>' + (opts.mode === 'sprint' ? '—' : U.fmtTime(r.bestLap)) + '</td>' +
       '<td>' + r.points + '</td></tr>').join('');
     const parts = [];
-    if (rec.time) parts.push('Bu harita/mod rekoru: <b>' + U.fmtTime(rec.time) + '</b>' + (rec.newTime ? ' <span class="new">YENİ REKOR!</span>' : ''));
-    if (rec.lap) parts.push('Harita en iyi tur: <b>' + U.fmtTime(rec.lap) + '</b>' + (rec.newLap ? ' <span class="new">YENİ!</span>' : ''));
-    parts.push('<small>~ işaretli süreler tahminidir (yarışı bitirmeden önce hesaplandı).</small>');
+    if (rec.time) parts.push(t('res.trackRecord', { t: U.fmtTime(rec.time) }) + (rec.newTime ? ' <span class="new">' + t('res.newRecord') + '</span>' : ''));
+    if (rec.lap) parts.push(t('res.trackLap', { t: U.fmtTime(rec.lap) }) + (rec.newLap ? ' <span class="new">' + t('res.new') + '</span>' : ''));
+    if (results.some(r => r.est)) parts.push('<small>' + t('res.estNote') + '</small>');
     U.$('res-records').innerHTML = parts.join('<br>');
-    show('results');
+    if (current !== 'results') show('results');
   }
 
   function init() {
@@ -244,11 +312,12 @@ const UI = (() => {
       });
     });
     bindSettings();
+    relocalize();
     show('main');
   }
 
   return {
-    init, show, hideAll, openSettings, startOptions, showResults, saveRecord,
+    init, show, hideAll, openSettings, startOptions, showResults, saveRecord, relocalize,
     get current() { return current; }
   };
 })();

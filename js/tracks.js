@@ -1,35 +1,35 @@
-/* Turbo Pist - harita (pist) tanımları ve üretimi */
+/* Web Car Racing Game - harita (pist) tanımları ve üretimi */
 'use strict';
 
 const THEMES = {
   cayir: {
-    name: 'Çayır', ground: '#4b8b3b', patch: '#427d33', road: '#5b5e64', line: '#f2f2f2',
+    ground: '#4b8b3b', patch: '#427d33', road: '#5b5e64', line: '#f2f2f2',
     curbA: '#d63a2f', curbB: '#f4f4f4', barrier: '#2b2b2b', barrier2: '#f4f4f4', grip: 1,
     scenery: [['tree', 5], ['bush', 3], ['rock', 1], ['flower', 2]], mini: '#2f6b27'
   },
   col: {
-    name: 'Çöl', ground: '#d9b56b', patch: '#cfa75c', road: '#77695a', line: '#fff3d6',
+    ground: '#d9b56b', patch: '#cfa75c', road: '#77695a', line: '#fff3d6',
     curbA: '#c2462d', curbB: '#f6e9cf', barrier: '#8b5a2b', barrier2: '#e8d2a6', grip: 0.94,
     scenery: [['cactus', 4], ['rock', 4], ['drybush', 3]], mini: '#a8843f'
   },
   kar: {
-    name: 'Kar', ground: '#e8eef3', patch: '#d8e2ea', road: '#5f6874', line: '#ffffff',
+    ground: '#e8eef3', patch: '#d8e2ea', road: '#5f6874', line: '#ffffff',
     curbA: '#2d6fd6', curbB: '#f4f8fb', barrier: '#344050', barrier2: '#dfe7ee', grip: 0.82,
     scenery: [['pine', 6], ['snowrock', 2], ['snowman', 0.3]], mini: '#9aa9b7'
   },
   sonbahar: {
-    name: 'Sonbahar', ground: '#9a7b3d', patch: '#8b6c33', road: '#57534e', line: '#f6efe2',
+    ground: '#9a7b3d', patch: '#8b6c33', road: '#57534e', line: '#f6efe2',
     curbA: '#d4612a', curbB: '#f6efe2', barrier: '#3a2d22', barrier2: '#e9c99a', grip: 0.95,
     scenery: [['tree_or', 4], ['tree_red', 3], ['bush', 2], ['hay', 1]], mini: '#6e5426'
   },
   gece: {
-    name: 'Gece', ground: '#18231e', patch: '#1d2b24', road: '#30343b', line: '#f7d046',
+    ground: '#18231e', patch: '#1d2b24', road: '#30343b', line: '#f7d046',
     curbA: '#e0218a', curbB: '#2ad1e6', barrier: '#111', barrier2: '#ffd23a', grip: 1, night: true,
     scenery: [['building', 4], ['lamp', 4], ['tree_dark', 2]], mini: '#0d1411'
   }
 };
 
-/* ad, tema, tohum, yarıçap, kontrol noktası, değişkenlik, x esneme, y esneme, yol genişliği */
+/* ad (Türkçe; çeviriler i18n.js 'track.<i>'), tema, tohum, yarıçap, kontrol noktası, değişkenlik, x esneme, y esneme, yol genişliği */
 const TRACK_DEFS = [
   ['Yeşil Vadi', 'cayir', 11, 1500, 6, 0.20, 1.35, 0.80, 160],
   ['Çınar Pisti', 'cayir', 23, 1600, 8, 0.30, 1.10, 0.95, 150],
@@ -205,7 +205,7 @@ const Tracks = (() => {
       width: def[8], half: def[8] / 2, barrier: def[8] / 2 + MARGIN,
       n, xs, ys, spacing: SP, length: n * SP,
       bounds: { minX, minY, maxX, maxY },
-      difficulty: vari < 0.3 ? 'Kolay' : (vari < 0.45 ? 'Orta' : 'Zor'),
+      difficulty: vari < 0.3 ? 'easy' : (vari < 0.45 ? 'medium' : 'hard'),   // i18n: 'level.<x>'
       full: false
     };
     cache[i] = t;

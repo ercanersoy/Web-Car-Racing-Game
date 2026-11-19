@@ -1,4 +1,4 @@
-/* Turbo Pist - Canvas 2D çizim */
+/* Web Car Racing Game - Canvas 2D çizim */
 'use strict';
 
 const Render = (() => {

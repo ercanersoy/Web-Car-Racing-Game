@@ -1,4 +1,4 @@
-/* Turbo Pist - gösterge paneli: hız göstergesi, dikiz aynası, mini harita, sıralama */
+/* Web Car Racing Game - gösterge paneli: hız göstergesi, dikiz aynası, mini harita, sıralama */
 'use strict';
 
 const Hud = (() => {
@@ -46,7 +46,6 @@ const Hud = (() => {
     els.hud.classList.remove('hidden');
     els.msg.textContent = ''; msgTimer = 0;
     applySettings();
-    els.lapLbl.textContent = race.mode === 'sprint' ? 'MESAFE' : 'TUR';
   }
 
   function stop() {
@@ -63,7 +62,9 @@ const Hud = (() => {
     const t = Settings.get('touch');
     const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     els.touch.classList.toggle('hidden', !(t === 'on' || (t === 'auto' && isTouch)));
-    els.spdUnit.textContent = Settings.get('units') === 'mph' ? 'mil/sa' : 'km/sa';
+    els.spdUnit.textContent = I18N.t(Settings.get('units') === 'mph' ? 'unit.mph' : 'unit.kmh');
+    if (race) els.lapLbl.textContent = I18N.t(race.mode === 'sprint' ? 'hud.dist' : 'hud.lap');
+    for (const k in cache) delete cache[k];   // dil/birim değişince metinler yeniden yazılsın
     dialKey = ''; miniBase = null;
   }
 
@@ -178,7 +179,7 @@ const Hud = (() => {
       set(els.pos, 'pos', p.rank + '/' + race.cars.length);
       if (race.mode === 'sprint') {
         const pct = U.clamp(Math.floor(Math.max(0, p.progress) / race.target * 100), 0, 100);
-        set(els.lap, 'lap', '%' + pct);
+        set(els.lap, 'lap', I18N.pct(pct));
       } else {
         set(els.lap, 'lap', U.clamp(p.lap + 1, 1, race.laps) + '/' + race.laps);
       }
@@ -193,7 +194,7 @@ const Hud = (() => {
       lastStand = now;
       const html = race.order.map(c =>
         '<li class="' + (c.isPlayer ? 'me' : '') + '"><b>' + c.rank + '</b><i style="background:' + c.color + '"></i>' +
-        escapeHtml(c.name) + (c.finished ? ' &#127937;' : '') + '</li>').join('');
+        escapeHtml(Race.nameOf(c)) + (c.finished ? ' &#127937;' : '') + '</li>').join('');
       if (cache.stand !== html) { cache.stand = html; els.stand.innerHTML = html; }
     }
   }

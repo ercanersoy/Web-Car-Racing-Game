@@ -1,11 +1,10 @@
-/* Turbo Pist - yarış mantığı, fizik ve yapay zekâ */
+/* Web Car Racing Game - yarış mantığı, fizik ve yapay zekâ */
 'use strict';
 
-const AI_NAMES = ['Kaan', 'Elif', 'Mert', 'Zeynep', 'Deniz', 'Burak', 'Selin', 'Emre', 'Ayla', 'Can', 'Defne', 'Arda'];
 const DIFFICULTIES = {
-  kolay: { name: 'Kolay', skill: 0.84, corner: 0.86, band: 0.02 },
-  orta: { name: 'Orta', skill: 0.93, corner: 0.95, band: 0.04 },
-  zor: { name: 'Zor', skill: 1.0, corner: 1.04, band: 0.05 }
+  kolay: { skill: 0.84, corner: 0.86, band: 0.02 },
+  orta: { skill: 0.93, corner: 0.95, band: 0.04 },
+  zor: { skill: 1.0, corner: 1.04, band: 0.05 }
 };
 const POINTS = [10, 8, 6, 5, 4, 3, 2, 1];
 
@@ -32,24 +31,35 @@ class Race {
     this.safeTables = {};
     this.rng = U.rng((Date.now() & 0xffff) + opts.trackIndex * 977);
 
-    // efektler
-    this.effects = opts.effects == null ? 1 : opts.effects;  // 0: yok, 1: fren izi, 2: fren izi + parçacık
-    this.maxSkids = this.effects === 0 ? 0 : (this.effects === 1 ? 1500 : 3000);
-    this.skids = new Float32Array(Math.max(1, this.maxSkids) * 4);
-    this.skidHead = 0; this.skidCount = 0;
+    // efektler (0: yok, 1: fren izi, 2: fren izi + parçacık)
+    this.skids = new Float32Array(3000 * 4);
     this.particles = [];
+    this.setEffects(opts.effects == null ? 1 : opts.effects);
 
     this.createCars();
+  }
+
+  /* Grafik kalitesi yarış sırasında değişirse efektleri güncelle */
+  setEffects(level) {
+    if (this.effects === level) return;
+    this.effects = level;
+    this.maxSkids = level === 0 ? 0 : (level === 1 ? 1500 : 3000);
+    this.skidHead = 0; this.skidCount = 0;
+    if (level < 2) this.particles.length = 0;
+  }
+
+  /* Görünen ad: dil değişince de doğru gösterilsin diye her seferinde hesaplanır */
+  static nameOf(car) {
+    if (car.isPlayer) return car.playerName || I18N.t('player.you');
+    return I18N.t('player.ai', { n: car.num });
   }
 
   createCars() {
     const o = this.opts, t = this.track, n = t.n;
     const count = U.clamp(o.carCount | 0, 1, 8);
     const colors = CAR_COLORS.map((c, i) => i).filter(i => i !== o.colorIdx);
-    const names = AI_NAMES.slice();
     // karıştır
     for (let i = colors.length - 1; i > 0; i--) { const j = Math.floor(this.rng() * (i + 1)); [colors[i], colors[j]] = [colors[j], colors[i]]; }
-    for (let i = names.length - 1; i > 0; i--) { const j = Math.floor(this.rng() * (i + 1)); [names[i], names[j]] = [names[j], names[i]]; }
 
     for (let k = 0; k < count; k++) {
       const isPlayer = k === count - 1;   // oyuncu en arkadan başlar
@@ -61,7 +71,7 @@ class Race {
       const lat = (col === 0 ? -1 : 1) * t.half * 0.42;
       const h = t.heading[i];
       const car = {
-        id: k, isPlayer, name: isPlayer ? (o.playerName || 'Oyuncu') : names[k % names.length],
+        id: k, isPlayer, num: k + 1, playerName: isPlayer ? (o.playerName || '') : '',
         modelIdx, model: CAR_MODELS[modelIdx], colorIdx, color: CAR_COLORS[colorIdx].hex,
         x: t.xs[i] + t.nx[i] * lat, y: t.ys[i] + t.ny[i] * lat, angle: h,
         vx: 0, vy: 0, vf: 0, vr: 0, angVel: 0,
@@ -336,8 +346,8 @@ class Race {
     }
 
     // ters yön
-    const tv = car.vx * Math.cos(h) + car.vy * Math.sin(h);
-    if (tv < -40) car.wrongT += dt; else car.wrongT = 0;
+    const facing = Math.cos(car.angle - h);
+    if (facing < -0.3 && car.vf > 40) car.wrongT += dt; else car.wrongT = 0;
 
     // tur / bitiş
     if (!car.finished) {
@@ -350,7 +360,9 @@ class Race {
         if (car.bestLap == null || lt < car.bestLap) car.bestLap = lt;
         if (this.hooks.onLap) this.hooks.onLap(car);
       }
-      if (car.progress >= this.target && car.lap >= (this.mode === 'sprint' ? 0 : this.laps)) this.finishCar(car);
+      // tur yarışında bitiş, son turun sayıldığı anla aynıdır (tur süresi = bitiş süresi)
+      const done = this.mode === 'sprint' ? (car.lap >= 0 && car.progress >= this.target) : car.lap >= this.laps;
+      if (done) this.finishCar(car);
     }
   }
 
@@ -492,7 +504,8 @@ class Race {
     const winner = list[0].time;
     const results = list.map((r, i) => ({
       rank: i + 1,
-      name: r.car.name,
+      car: r.car,
+      name: Race.nameOf(r.car),
       isPlayer: r.car.isPlayer,
       model: r.car.model.name,
       color: r.car.color,

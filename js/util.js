@@ -1,4 +1,4 @@
-/* Turbo Pist - yardımcı fonksiyonlar */
+/* Web Car Racing Game - yardımcı fonksiyonlar */
 'use strict';
 
 const U = (() => {
