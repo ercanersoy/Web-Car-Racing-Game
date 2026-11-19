@@ -16,8 +16,10 @@ You can also serve it with any static file server, e.g. `python3 -m http.server`
 - **Computer opponents:** Player 1, Player 2, … (Oyuncu 1, Oyuncu 2, … in Turkish)
 - **Languages:** Turkish, American English (en-US) and British English (en-GB); picked from the browser language on first launch and changeable from the main menu or settings
 - **8 colour** options
-- **25 maps** in 5 themes: meadow, desert, snow (low grip), autumn, night (headlights)
-- **Race types:** lap race and sprint (~70% of a lap)
+- **25 circuits** in 5 themes: meadow, desert, snow (low grip), autumn, night (headlights)
+- **25 sprint roads:** one-way roads with separate start and finish points (same 5 themes)
+- **Race types:** lap race and sprint
+- **Easy-on-the-eyes design:** muted colours, no pure white/black or neon, no fast-scrolling fine patterns, smooth camera rotation; all graphics are top-down with shadows cast from a fixed light direction
 - **Software-generated music:** tracks composed in real time with the Web Audio API, unique to each map; menu music; engine, skid, collision and countdown sounds
 - **HUD:** analogue/digital speedometer with gear, rear-view mirror, minimap, live standings, lap times, wrong-way warning
 - **Results table:** position, time, gap, best lap and points at the end of the race; local records (localStorage)
@@ -54,7 +56,7 @@ js/util.js        Helper functions
 js/settings.js    Settings
 js/i18n.js        Translations (tr, en-US, en-GB)
 js/cars.js        Car models, colours, sprites
-js/tracks.js      Definition and generation of the 25 maps
+js/tracks.js      Definition and generation of the 25 circuits and 25 sprint roads
 js/race.js        Race logic, physics, AI
 js/audio.js       Procedural music and sound effects
 js/input.js       Keyboard / game controller / touch

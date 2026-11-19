@@ -16,7 +16,7 @@ const I18N = (() => {
     'mode.laps': 'Tur yarışı',
     'mode.sprint': 'Kısa yarış',
     'mode.laps.desc': 'Seçilen tur sayısını ilk tamamlayan kazanır.',
-    'mode.sprint.desc': 'Başlangıçtan sarı-dama bitiş çizgisine (turun ~%70\'i) tek seferlik hızlı bir sprint.',
+    'mode.sprint.desc': 'Başlangıç ve bitişi ayrı, tek yönlü bir yolda hızlı bir yarış (25 ayrı harita).',
     'new.laps': 'Tur sayısı:',
     'new.cars': 'Araba sayısı (siz dahil):',
     'new.timeTrial': '(zamana karşı)',
@@ -90,7 +90,7 @@ const I18N = (() => {
     'about.title': 'Hakkında',
     'about.p1': '<b>Web Car Racing Game</b>, tamamen tarayıcıda çalışan, tek oyunculu ve kuşbakışı bir araba yarışı oyunudur. Sunucu gerektirmez; HTML, CSS ve saf JavaScript ile, hiçbir ek kütüphane ya da çatı kullanılmadan geliştirilmiştir.',
     'about.features': 'Özellikler',
-    'about.list': '<li>5 farklı özellikte otomobil ve 8 renk seçeneği</li><li>5 temada (çayır, çöl, kar, sonbahar, gece) 25 harita</li><li>Tur yarışı (1–10 tur) ve kısa yarış (turun ~%70\'i kadar sprint)</li><li>1 ile 8 araç arasında yarış; üç zorluk seviyesinde bilgisayar rakipler</li><li>Web Audio API ile gerçek zamanlı, yazılımla üretilen müzik ve ses efektleri</li><li>Hız göstergesi, dikiz aynası, mini harita, canlı sıralama</li><li>Yarış sonunda skor tablosu ve yerel rekorlar</li><li>Türkçe, Amerikan İngilizcesi ve İngiliz İngilizcesi dil desteği</li><li>Düşük sistem kaynağı için ayarlanabilir grafik kalitesi ve kare hızı sınırı</li>',
+    'about.list': '<li>5 farklı özellikte otomobil ve 8 renk seçeneği</li><li>5 temada (çayır, çöl, kar, sonbahar, gece) 25 tur pisti</li><li>Başlangıç ve bitişi ayrı 25 kısa yarış yolu</li><li>Tur yarışı (1–10 tur) ve kısa yarış seçenekleri</li><li>1 ile 8 araç arasında yarış; üç zorluk seviyesinde bilgisayar rakipler</li><li>Web Audio API ile gerçek zamanlı, yazılımla üretilen müzik ve ses efektleri</li><li>Hız göstergesi, dikiz aynası, mini harita, canlı sıralama</li><li>Yarış sonunda skor tablosu ve yerel rekorlar</li><li>Türkçe, Amerikan İngilizcesi ve İngiliz İngilizcesi dil desteği</li><li>Göz yormayan, yumuşak renkli tasarım</li><li>Düşük sistem kaynağı için ayarlanabilir grafik kalitesi ve kare hızı sınırı</li>',
     'about.tech': 'Teknoloji',
     'about.techText': 'Canvas 2D, Web Audio API, localStorage. Tüm ayarlar ve rekorlar yalnızca bu tarayıcıda saklanır.',
     'about.copyTitle': 'Telif hakkı',
@@ -134,7 +134,8 @@ const I18N = (() => {
     'track.5': 'Serap', 'track.6': 'Kum Fırtınası', 'track.7': 'Vaha Turu', 'track.8': 'Kaktüs Kanyonu', 'track.9': 'Güneş Yolu',
     'track.10': 'Kartepe', 'track.11': 'Buz Kraliçesi', 'track.12': 'Çam Ormanı', 'track.13': 'Kuzey Rüzgârı', 'track.14': 'Beyaz Zirve',
     'track.15': 'Hazan', 'track.16': 'Kızıl Yaprak', 'track.17': 'Bağ Bozumu', 'track.18': 'Kestane Yolu', 'track.19': 'Ekim Rallisi',
-    'track.20': 'Ay Işığı', 'track.21': 'Neon Bulvarı', 'track.22': 'Liman Turu', 'track.23': 'Köprü Altı', 'track.24': 'Gece Yarısı'
+    'track.20': 'Ay Işığı', 'track.21': 'Neon Bulvarı', 'track.22': 'Liman Turu', 'track.23': 'Köprü Altı', 'track.24': 'Gece Yarısı',
+    'sprint.0': 'Köy Yolu', 'sprint.1': 'Değirmen Geçidi', 'sprint.2': 'Dere Kenarı', 'sprint.3': 'Yayla Yolu', 'sprint.4': 'Bayır Aşağı', 'sprint.5': 'Kervan Yolu', 'sprint.6': 'Kızgın Kum', 'sprint.7': 'Kum Tepeleri', 'sprint.8': 'Kuru Vadi', 'sprint.9': 'Sıcak Rüzgâr', 'sprint.10': 'Buzul Geçidi', 'sprint.11': 'Kızak Yolu', 'sprint.12': 'Tipi', 'sprint.13': 'Kar Vadisi', 'sprint.14': 'Zirve Yolu', 'sprint.15': 'Yaprak Dökümü', 'sprint.16': 'Bağ Yolu', 'sprint.17': 'Sis Vadisi', 'sprint.18': 'Elma Bahçesi', 'sprint.19': 'Rüzgârlı Tepe', 'sprint.20': 'Şehir Işıkları', 'sprint.21': 'Sahil Yolu', 'sprint.22': 'Gece Ekspresi', 'sprint.23': 'Yıldız Yolu', 'sprint.24': 'Şafak Öncesi'
   };
 
   const enUS = {
@@ -151,7 +152,7 @@ const I18N = (() => {
     'mode.laps': 'Lap race',
     'mode.sprint': 'Sprint',
     'mode.laps.desc': 'The first to complete the selected number of laps wins.',
-    'mode.sprint.desc': 'A one-off dash from the start to the yellow checkered line (~70% of a lap).',
+    'mode.sprint.desc': 'A quick dash along a one-way road with separate start and finish points (25 dedicated maps).',
     'new.laps': 'Laps:',
     'new.cars': 'Number of cars (including you):',
     'new.timeTrial': '(time trial)',
@@ -225,7 +226,7 @@ const I18N = (() => {
     'about.title': 'About',
     'about.p1': '<b>Web Car Racing Game</b> is a single-player, top-down car racing game that runs entirely in your browser. It needs no server and is built with HTML, CSS and plain JavaScript, without any additional libraries or frameworks.',
     'about.features': 'Features',
-    'about.list': '<li>5 cars with different characteristics and 8 color options</li><li>25 maps in 5 themes (meadow, desert, snow, fall, night)</li><li>Lap races (1–10 laps) and sprints (~70% of a lap)</li><li>Races with 1 to 8 cars; computer opponents at three difficulty levels</li><li>Real-time, software-generated music and sound effects using the Web Audio API</li><li>Speedometer, rear-view mirror, minimap and live standings</li><li>End-of-race scoreboard and local records</li><li>Turkish, American English and British English language support</li><li>Adjustable graphics quality and frame rate limit for low system resource usage</li>',
+    'about.list': '<li>5 cars with different characteristics and 8 color options</li><li>25 circuits in 5 themes (meadow, desert, snow, fall, night)</li><li>25 sprint roads with separate start and finish points</li><li>Lap races (1–10 laps) and sprints</li><li>Races with 1 to 8 cars; computer opponents at three difficulty levels</li><li>Real-time, software-generated music and sound effects using the Web Audio API</li><li>Speedometer, rear-view mirror, minimap and live standings</li><li>End-of-race scoreboard and local records</li><li>Turkish, American English and British English language support</li><li>Easy-on-the-eyes design with soft colors</li><li>Adjustable graphics quality and frame rate limit for low system resource usage</li>',
     'about.tech': 'Technology',
     'about.techText': 'Canvas 2D, Web Audio API, localStorage. All settings and records are stored in this browser only.',
     'about.copyTitle': 'Copyright',
@@ -269,7 +270,8 @@ const I18N = (() => {
     'track.5': 'Mirage', 'track.6': 'Sandstorm', 'track.7': 'Oasis Loop', 'track.8': 'Cactus Canyon', 'track.9': 'Sun Road',
     'track.10': 'Kartepe', 'track.11': 'Ice Queen', 'track.12': 'Pine Forest', 'track.13': 'North Wind', 'track.14': 'White Summit',
     'track.15': 'Falling Leaves', 'track.16': 'Crimson Leaf', 'track.17': 'Grape Harvest', 'track.18': 'Chestnut Lane', 'track.19': 'October Rally',
-    'track.20': 'Moonlight', 'track.21': 'Neon Boulevard', 'track.22': 'Harbor Loop', 'track.23': 'Under the Bridge', 'track.24': 'Midnight'
+    'track.20': 'Moonlight', 'track.21': 'Neon Boulevard', 'track.22': 'Harbor Loop', 'track.23': 'Under the Bridge', 'track.24': 'Midnight',
+    'sprint.0': 'Village Road', 'sprint.1': 'Mill Pass', 'sprint.2': 'Creekside', 'sprint.3': 'Highland Road', 'sprint.4': 'Downhill Run', 'sprint.5': 'Caravan Route', 'sprint.6': 'Scorching Sands', 'sprint.7': 'Dunes', 'sprint.8': 'Dry Valley', 'sprint.9': 'Hot Wind', 'sprint.10': 'Glacier Pass', 'sprint.11': 'Sled Run', 'sprint.12': 'Blizzard', 'sprint.13': 'Snow Valley', 'sprint.14': 'Summit Road', 'sprint.15': 'Leaf Fall', 'sprint.16': 'Vineyard Road', 'sprint.17': 'Misty Valley', 'sprint.18': 'Apple Orchard', 'sprint.19': 'Windy Hill', 'sprint.20': 'City Lights', 'sprint.21': 'Coast Road', 'sprint.22': 'Night Express', 'sprint.23': 'Starlight Road', 'sprint.24': 'Before Dawn'
   };
 
   /* İngiliz İngilizcesi: Amerikan İngilizcesinden yalnızca farklı olanlar */
@@ -285,8 +287,10 @@ const I18N = (() => {
     'res.points': 'Pts',
     'about.list': enUS['about.list']
       .replace('8 color options', '8 colour options')
-      .replace('(meadow, desert, snow, fall, night)', '(meadow, desert, snow, autumn, night)'),
-    'track.22': 'Harbour Loop'
+      .replace('(meadow, desert, snow, fall, night)', '(meadow, desert, snow, autumn, night)')
+      .replace('with soft colors', 'with soft colours'),
+    'track.22': 'Harbour Loop',
+    'sprint.11': 'Sledge Run'
   });
 
   const DICTS = { tr: tr, 'en-US': enUS, 'en-GB': enGB };

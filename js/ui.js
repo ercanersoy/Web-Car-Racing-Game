@@ -4,17 +4,17 @@
 const UI = (() => {
   const SEL_KEY = 'wcrg.newgame.v1';
   const REC_KEY = 'wcrg.records.v1';
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
   const screens = ['main', 'new', 'settings', 'about', 'pause', 'results'];
   let current = 'main';
   let settingsBack = 'main';
-  let mapsBuilt = false;
+  const mapCards = { circuit: null, sprint: null };   // haritalar türüne göre bir kez oluşturulur
   let lastResults = null;
   const sel = sanitize(U.load(SEL_KEY, {}));
 
   /* Kayıtlı seçimler bozuk/eski olsa da geçerli değerlere zorla */
   function sanitize(o) {
-    const d = { mode: 'laps', laps: 3, cars: 6, difficulty: 'orta', model: 0, color: 0, track: 0 };
+    const d = { mode: 'laps', laps: 3, cars: 6, difficulty: 'orta', model: 0, color: 0, track: 0, sprintTrack: 0 };
     const int = (v, a, b, def) => (Number.isInteger(v) && v >= a && v <= b) ? v : def;
     return {
       mode: o.mode === 'sprint' ? 'sprint' : 'laps',
@@ -23,12 +23,16 @@ const UI = (() => {
       difficulty: DIFFICULTIES[o.difficulty] ? o.difficulty : d.difficulty,
       model: int(o.model, 0, CAR_MODELS.length - 1, d.model),
       color: int(o.color, 0, CAR_COLORS.length - 1, d.color),
-      track: int(o.track, 0, TRACK_DEFS.length - 1, d.track)
+      track: int(o.track, 0, TRACK_DEFS.length - 1, d.track),
+      sprintTrack: int(o.sprintTrack, 0, SPRINT_DEFS.length - 1, d.sprintTrack)
     };
   }
 
   const t = (k, p) => I18N.t(k, p);
-  const trackName = i => t('track.' + i);
+  const kindOfMode = mode => (mode === 'sprint' ? 'sprint' : 'circuit');
+  const trackName = (kind, i) => t((kind === 'sprint' ? 'sprint.' : 'track.') + i);
+  const curKind = () => kindOfMode(sel.mode);
+  const curTrack = () => (sel.mode === 'sprint' ? sel.sprintTrack : sel.track);
 
   function show(name) {
     screens.forEach(s => U.$('scr-' + s).classList.toggle('hidden', s !== name));
@@ -68,8 +72,8 @@ const UI = (() => {
     I18N.apply();
     fillLangSelects();
     U.$('about-version').textContent = t('about.version', { v: VERSION });
-    if (mapsBuilt) {
-      Array.from(U.$('map-list').children).forEach((card, i) => localizeMapCard(card, i));
+    for (const kind in mapCards) {
+      if (mapCards[kind]) mapCards[kind].forEach((card, i) => localizeMapCard(card, kind, i));
     }
     if (current === 'new') buildNewGame();
     if (current === 'settings') fillSettings();
@@ -78,7 +82,8 @@ const UI = (() => {
 
   /* ---------- rekorlar ---------- */
   function records() { return U.load(REC_KEY, {}); }
-  function recKey(o) { return o.trackIndex + ':' + o.mode + (o.mode === 'laps' ? ':' + o.laps : ''); }
+  /* tur yarışı: harita + tur sayısı; kısa yarış: sprint haritası */
+  function recKey(o) { return o.mode === 'sprint' ? 's' + o.trackIndex : 'c' + o.trackIndex + ':' + o.laps; }
   function saveRecord(o, result) {
     const recs = records();
     const out = { newTime: false, newLap: false };
@@ -86,12 +91,12 @@ const UI = (() => {
       const k = recKey(o);
       if (!recs[k] || result.time < recs[k]) { recs[k] = Math.floor(result.time); out.newTime = true; }
     }
-    if (result.bestLap != null) {
+    if (result.bestLap != null && o.mode === 'laps') {
       const k = 'lap:' + o.trackIndex;
       if (!recs[k] || result.bestLap < recs[k]) { recs[k] = Math.floor(result.bestLap); out.newLap = true; }
     }
     U.save(REC_KEY, recs);
-    out.time = recs[recKey(o)]; out.lap = recs['lap:' + o.trackIndex];
+    out.time = recs[recKey(o)]; out.lap = o.mode === 'laps' ? recs['lap:' + o.trackIndex] : null;
     return out;
   }
 
@@ -109,12 +114,13 @@ const UI = (() => {
   function summary() {
     const mode = sel.mode === 'laps' ? (sel.laps === 1 ? t('sum.lap1') : t('sum.laps', { n: sel.laps })) : t('mode.sprint');
     const cars = sel.cars === 1 ? t('sum.solo') : t('sum.cars', { n: sel.cars });
-    U.$('sel-summary').textContent = trackName(sel.track) + ' · ' + mode + ' · ' + cars + ' · ' + CAR_MODELS[sel.model].name;
-    U.$('map-sel-name').textContent = '— ' + trackName(sel.track);
+    const name = trackName(curKind(), curTrack());
+    U.$('sel-summary').textContent = name + ' · ' + mode + ' · ' + cars + ' · ' + CAR_MODELS[sel.model].name;
+    U.$('map-sel-name').textContent = '— ' + name;
   }
 
   function buildNewGame() {
-    seg('opt-mode', sel.mode, v => { sel.mode = v; updateMode(); saveSel(); refreshRecords(); });
+    seg('opt-mode', sel.mode, v => { sel.mode = v; updateMode(); saveSel(); buildMaps(); });
     seg('opt-diff', sel.difficulty, v => { sel.difficulty = v; saveSel(); });
     const laps = U.$('opt-laps'), cars = U.$('opt-cars');
     laps.value = sel.laps; U.$('opt-laps-val').textContent = sel.laps;
@@ -175,50 +181,61 @@ const UI = (() => {
     });
   }
 
-  function localizeMapCard(card, i) {
-    card.querySelector('.name').textContent = (i + 1) + '. ' + trackName(i);
-    card.querySelector('.theme').textContent = t('theme.' + TRACK_DEFS[i][1]);
+  function localizeMapCard(card, kind, i) {
+    const def = Tracks.def(kind, i);
+    card.querySelector('.name').textContent = (i + 1) + '. ' + trackName(kind, i);
+    card.querySelector('.theme').textContent = t('theme.' + def[1]);
     if (card.dataset.ready) {
-      const tr = Tracks.getBasic(i);
+      const tr = Tracks.getBasic(kind, i);
       card.querySelector('.diff').textContent = t('level.' + tr.difficulty) + ' · ' + (tr.length * 0.42 / 3600).toFixed(1) + ' km';
     }
   }
 
-  function buildMaps() {
-    const list = U.$('map-list');
-    if (!mapsBuilt) {
-      mapsBuilt = true;
-      list.innerHTML = '';
-      for (let i = 0; i < Tracks.count; i++) {
-        const b = document.createElement('button');
-        b.type = 'button'; b.className = 'map-card'; b.dataset.i = i;
-        b.appendChild(U.makeCanvas(160, 110));
-        b.insertAdjacentHTML('beforeend', '<div class="name"></div>' +
-          '<div class="meta"><span class="theme"></span><span class="diff"></span></div><div class="rec"></div>');
-        b.onclick = () => { Sound.click(); sel.track = i; saveSel(); markMap(); };
-        localizeMapCard(b, i);
-        list.appendChild(b);
-      }
-      // küçük resimleri parça parça üret (arayüz donmasın)
-      let i = 0;
-      const step = () => {
-        const end = Math.min(Tracks.count, i + 3);
-        for (; i < end; i++) {
-          const card = list.children[i];
-          Render.thumbnail(card.querySelector('canvas'), Tracks.getBasic(i));
-          card.dataset.ready = '1';
-          localizeMapCard(card, i);
-        }
-        if (i < Tracks.count) setTimeout(step, 0);
+  function createMapCards(kind) {
+    const cards = [];
+    for (let i = 0; i < Tracks.count(kind); i++) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'map-card';
+      b.appendChild(U.makeCanvas(160, 110));
+      b.insertAdjacentHTML('beforeend', '<div class="name"></div>' +
+        '<div class="meta"><span class="theme"></span><span class="diff"></span></div><div class="rec"></div>');
+      b.onclick = () => {
+        Sound.click();
+        if (kind === 'sprint') sel.sprintTrack = i; else sel.track = i;
+        saveSel(); markMap();
       };
-      step();
+      localizeMapCard(b, kind, i);
+      cards.push(b);
+    }
+    // küçük resimleri parça parça üret (arayüz donmasın)
+    let i = 0;
+    const step = () => {
+      const end = Math.min(cards.length, i + 3);
+      for (; i < end; i++) {
+        Render.thumbnail(cards[i].querySelector('canvas'), Tracks.getBasic(kind, i));
+        cards[i].dataset.ready = '1';
+        localizeMapCard(cards[i], kind, i);
+      }
+      if (i < cards.length) setTimeout(step, 0);
+    };
+    step();
+    return cards;
+  }
+
+  function buildMaps() {
+    const kind = curKind(), list = U.$('map-list');
+    if (!mapCards[kind]) mapCards[kind] = createMapCards(kind);
+    if (list.dataset.kind !== kind) {
+      list.replaceChildren(...mapCards[kind]);
+      list.dataset.kind = kind;
     }
     markMap();
     refreshRecords();
   }
 
   function markMap() {
-    Array.from(U.$('map-list').children).forEach((c, j) => c.classList.toggle('on', j === sel.track));
+    const cur = curTrack();
+    Array.from(U.$('map-list').children).forEach((c, j) => c.classList.toggle('on', j === cur));
     summary();
   }
 
@@ -228,14 +245,14 @@ const UI = (() => {
       const k = recKey({ trackIndex: i, mode: sel.mode, laps: sel.laps });
       let txt = '';
       if (recs[k]) txt = t('map.record', { t: U.fmtTime(recs[k]) });
-      else if (recs['lap:' + i]) txt = t('map.bestLap', { t: U.fmtTime(recs['lap:' + i]) });
+      else if (sel.mode === 'laps' && recs['lap:' + i]) txt = t('map.bestLap', { t: U.fmtTime(recs['lap:' + i]) });
       c.querySelector('.rec').textContent = txt;
     });
   }
 
   function startOptions() {
     return {
-      trackIndex: sel.track, mode: sel.mode, laps: sel.laps, modelIdx: sel.model, colorIdx: sel.color,
+      trackIndex: curTrack(), mode: sel.mode, laps: sel.laps, modelIdx: sel.model, colorIdx: sel.color,
       carCount: sel.cars, difficulty: sel.difficulty, playerName: Settings.get('playerName') || ''
     };
   }
@@ -284,8 +301,9 @@ const UI = (() => {
     lastResults = { results, opts, rec };
     const me = results.find(r => r.isPlayer);
     const mode = opts.mode === 'laps' ? (opts.laps === 1 ? t('sum.lap1') : t('sum.laps', { n: opts.laps })) : t('mode.sprint');
-    U.$('res-info').innerHTML = '<b>' + Hud.escapeHtml(trackName(opts.trackIndex)) + '</b> · ' + mode + ' · ' +
+    U.$('res-info').innerHTML = '<b>' + Hud.escapeHtml(trackName(kindOfMode(opts.mode), opts.trackIndex)) + '</b> · ' + mode + ' · ' +
       (results.length > 1 ? t('res.yourPos', { p: me.rank, n: results.length }) : t('res.timeTrial'));
+    document.querySelector('table.results').classList.toggle('sprint', opts.mode === 'sprint');
     U.$('res-body').innerHTML = results.map(r =>
       '<tr class="' + (r.isPlayer ? 'me' : '') + '">' +
       '<td class="' + (r.rank === 1 ? 'r1' : '') + '">' + r.rank + '</td>' +

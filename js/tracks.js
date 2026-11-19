@@ -1,35 +1,42 @@
-/* Web Car Racing Game - harita (pist) tanımları ve üretimi */
+/* Web Car Racing Game - harita (pist) tanımları ve üretimi
+ *
+ * İki tür harita vardır:
+ *  - 'circuit': kapalı tur pisti (tur yarışı), başlangıç ve bitiş aynı çizgidedir.
+ *  - 'sprint' : açık yol (kısa yarış), başlangıç ve bitiş noktaları ayrıdır.
+ */
 'use strict';
 
+/* Göz yormayan, doygunluğu düşük renkler (saf beyaz / saf siyah ve neon renk yok) */
 const THEMES = {
   cayir: {
-    ground: '#4b8b3b', patch: '#427d33', road: '#5b5e64', line: '#f2f2f2',
-    curbA: '#d63a2f', curbB: '#f4f4f4', barrier: '#2b2b2b', barrier2: '#f4f4f4', grip: 1,
-    scenery: [['tree', 5], ['bush', 3], ['rock', 1], ['flower', 2]], mini: '#2f6b27'
+    ground: '#5f8150', patch: '#597a4b', road: '#62656b', line: '#d9d8cf',
+    curbA: '#a65a50', curbB: '#d3cfc3', barrier: '#3d4239', barrier2: '#8e9186', grip: 1,
+    scenery: [['tree', 5], ['bush', 3], ['rock', 1], ['flower', 2]]
   },
   col: {
-    ground: '#d9b56b', patch: '#cfa75c', road: '#77695a', line: '#fff3d6',
-    curbA: '#c2462d', curbB: '#f6e9cf', barrier: '#8b5a2b', barrier2: '#e8d2a6', grip: 0.94,
-    scenery: [['cactus', 4], ['rock', 4], ['drybush', 3]], mini: '#a8843f'
+    ground: '#c4ab78', patch: '#bba16e', road: '#776c60', line: '#e3d8bf',
+    curbA: '#a5654f', curbB: '#ddd1b7', barrier: '#6b5539', barrier2: '#b39b76', grip: 0.94,
+    scenery: [['cactus', 4], ['rock', 4], ['drybush', 3]]
   },
   kar: {
-    ground: '#e8eef3', patch: '#d8e2ea', road: '#5f6874', line: '#ffffff',
-    curbA: '#2d6fd6', curbB: '#f4f8fb', barrier: '#344050', barrier2: '#dfe7ee', grip: 0.82,
-    scenery: [['pine', 6], ['snowrock', 2], ['snowman', 0.3]], mini: '#9aa9b7'
+    ground: '#cdd6dd', patch: '#c3cdd5', road: '#646c76', line: '#e6eaee',
+    curbA: '#617ea3', curbB: '#dde3e8', barrier: '#4a5563', barrier2: '#98a4b0', grip: 0.82,
+    scenery: [['pine', 6], ['snowrock', 2], ['snowman', 0.3]]
   },
   sonbahar: {
-    ground: '#9a7b3d', patch: '#8b6c33', road: '#57534e', line: '#f6efe2',
-    curbA: '#d4612a', curbB: '#f6efe2', barrier: '#3a2d22', barrier2: '#e9c99a', grip: 0.95,
-    scenery: [['tree_or', 4], ['tree_red', 3], ['bush', 2], ['hay', 1]], mini: '#6e5426'
+    ground: '#8d7a4f', patch: '#857249', road: '#5d5954', line: '#e1dbcf',
+    curbA: '#a3663f', curbB: '#d8cfbd', barrier: '#4a3e31', barrier2: '#a58f6e', grip: 0.95,
+    scenery: [['tree_or', 4], ['tree_red', 3], ['bush', 2], ['hay', 1]]
   },
   gece: {
-    ground: '#18231e', patch: '#1d2b24', road: '#30343b', line: '#f7d046',
-    curbA: '#e0218a', curbB: '#2ad1e6', barrier: '#111', barrier2: '#ffd23a', grip: 1, night: true,
-    scenery: [['building', 4], ['lamp', 4], ['tree_dark', 2]], mini: '#0d1411'
+    ground: '#202a27', patch: '#24302c', road: '#3b3f46', line: '#a8955c',
+    curbA: '#66597c', curbB: '#557a80', barrier: '#171b1e', barrier2: '#6f6648', grip: 1, night: true,
+    scenery: [['building', 4], ['lamp', 4], ['tree_dark', 2]]
   }
 };
 
-/* ad (Türkçe; çeviriler i18n.js 'track.<i>'), tema, tohum, yarıçap, kontrol noktası, değişkenlik, x esneme, y esneme, yol genişliği */
+/* Tur pistleri - ad (Türkçe; çeviriler i18n.js 'track.<i>'), tema, tohum, yarıçap,
+   kontrol noktası, değişkenlik, x esneme, y esneme, yol genişliği */
 const TRACK_DEFS = [
   ['Yeşil Vadi', 'cayir', 11, 1500, 6, 0.20, 1.35, 0.80, 160],
   ['Çınar Pisti', 'cayir', 23, 1600, 8, 0.30, 1.10, 0.95, 150],
@@ -58,15 +65,51 @@ const TRACK_DEFS = [
   ['Gece Yarısı', 'gece', 241, 2200, 15, 0.56, 1.05, 1.00, 135]
 ];
 
+/* Kısa yarış yolları - ad (çeviriler i18n.js 'sprint.<i>'), tema, tohum, yol uzunluğu,
+   kesit uzunluğu, kesit başına azami dönüş (radyan), ana yönden azami sapma (π katı), yol genişliği */
+const SPRINT_DEFS = [
+  ['Köy Yolu', 'cayir', 301, 7600, 950, 0.45, 0.40, 160],
+  ['Değirmen Geçidi', 'cayir', 313, 8200, 850, 0.60, 0.50, 150],
+  ['Dere Kenarı', 'cayir', 327, 8800, 800, 0.75, 0.55, 150],
+  ['Yayla Yolu', 'cayir', 331, 9400, 750, 0.90, 0.62, 140],
+  ['Bayır Aşağı', 'cayir', 347, 10000, 700, 1.05, 0.70, 135],
+  ['Kervan Yolu', 'col', 353, 7800, 1000, 0.45, 0.40, 160],
+  ['Kızgın Kum', 'col', 367, 8400, 900, 0.60, 0.50, 150],
+  ['Kum Tepeleri', 'col', 373, 9000, 800, 0.78, 0.56, 145],
+  ['Kuru Vadi', 'col', 389, 9600, 750, 0.92, 0.63, 140],
+  ['Sıcak Rüzgâr', 'col', 397, 10200, 700, 1.05, 0.70, 135],
+  ['Buzul Geçidi', 'kar', 401, 7600, 950, 0.45, 0.40, 160],
+  ['Kızak Yolu', 'kar', 419, 8200, 850, 0.62, 0.50, 150],
+  ['Tipi', 'kar', 421, 8800, 800, 0.76, 0.56, 145],
+  ['Kar Vadisi', 'kar', 433, 9400, 750, 0.90, 0.62, 140],
+  ['Zirve Yolu', 'kar', 439, 10000, 700, 1.05, 0.70, 135],
+  ['Yaprak Dökümü', 'sonbahar', 443, 7800, 950, 0.45, 0.40, 160],
+  ['Bağ Yolu', 'sonbahar', 457, 8400, 850, 0.60, 0.50, 150],
+  ['Sis Vadisi', 'sonbahar', 461, 9000, 800, 0.78, 0.56, 145],
+  ['Elma Bahçesi', 'sonbahar', 479, 9600, 750, 0.92, 0.63, 140],
+  ['Rüzgârlı Tepe', 'sonbahar', 487, 10200, 700, 1.05, 0.70, 135],
+  ['Şehir Işıkları', 'gece', 491, 7600, 1000, 0.45, 0.40, 160],
+  ['Sahil Yolu', 'gece', 503, 8200, 900, 0.60, 0.50, 150],
+  ['Gece Ekspresi', 'gece', 509, 8800, 800, 0.76, 0.56, 145],
+  ['Yıldız Yolu', 'gece', 521, 9400, 750, 0.90, 0.62, 140],
+  ['Şafak Öncesi', 'gece', 523, 10000, 700, 1.05, 0.70, 135]
+];
+
 const Tracks = (() => {
   const SP = 10;            // örnek noktaları arası mesafe
   const MARGIN = 85;        // yol kenarı ile bariyer arası çim payı
-  const cache = {};
+  const SPRINT_START = 45;  // açık yolda başlangıç çizgisi (örnek indeksi); gerisi başlangıç ızgarası
+  const SPRINT_RUNOFF = 80; // bitiş çizgisinden sonra yavaşlama alanı (örnek sayısı)
+  const cache = { circuit: {}, sprint: {} };
+  const DEFS = { circuit: TRACK_DEFS, sprint: SPRINT_DEFS };
 
-  function catmullRom(ctrl, segs) {
+  /* closed: kapalı eğri mi; açık eğride uçlar tekrarlanır */
+  function catmullRom(ctrl, segs, closed) {
     const out = [], K = ctrl.length;
-    for (let i = 0; i < K; i++) {
-      const p0 = ctrl[(i - 1 + K) % K], p1 = ctrl[i], p2 = ctrl[(i + 1) % K], p3 = ctrl[(i + 2) % K];
+    const P = i => closed ? ctrl[(i + K) % K] : ctrl[Math.max(0, Math.min(K - 1, i))];
+    const last = closed ? K : K - 1;
+    for (let i = 0; i < last; i++) {
+      const p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2);
       for (let s = 0; s < segs; s++) {
         const t = s / segs, t2 = t * t, t3 = t2 * t;
         out.push({
@@ -75,18 +118,20 @@ const Tracks = (() => {
         });
       }
     }
+    if (!closed) out.push({ x: ctrl[K - 1].x, y: ctrl[K - 1].y });
     return out;
   }
 
-  /* Kapalı çizgiyi eşit aralıklı noktalara böl */
-  function resample(pts, step) {
+  /* Çizgiyi eşit aralıklı noktalara böl */
+  function resample(pts, step, closed) {
     const out = [{ x: pts[0].x, y: pts[0].y }];
     let carry = 0;
-    const N = pts.length;
-    for (let i = 0; i < N; i++) {
+    const N = pts.length, segCount = closed ? N : N - 1;
+    for (let i = 0; i < segCount; i++) {
       const a = pts[i], b = pts[(i + 1) % N];
       const dx = b.x - a.x, dy = b.y - a.y;
       const segLen = Math.hypot(dx, dy);
+      if (segLen < 1e-6) continue;
       let d = step - carry;
       while (d <= segLen) {
         out.push({ x: a.x + dx * d / segLen, y: a.y + dy * d / segLen });
@@ -94,40 +139,45 @@ const Tracks = (() => {
       }
       carry = segLen - (d - step);
     }
-    // son nokta başlangıca çok yakınsa at
-    const l = out[out.length - 1];
-    if (Math.hypot(l.x - out[0].x, l.y - out[0].y) < step * 0.5) out.pop();
+    if (closed) {
+      const l = out[out.length - 1];
+      if (Math.hypot(l.x - out[0].x, l.y - out[0].y) < step * 0.5) out.pop();
+    }
     return out;
   }
 
-  function headings(pts) {
-    const n = pts.length, h = new Float32Array(n);
+  function idxFn(n, closed) {
+    return closed ? (i => ((i % n) + n) % n) : (i => (i < 0 ? 0 : (i >= n ? n - 1 : i)));
+  }
+
+  function headings(pts, closed) {
+    const n = pts.length, h = new Float32Array(n), I = idxFn(n, closed);
     for (let i = 0; i < n; i++) {
-      const a = pts[(i - 1 + n) % n], b = pts[(i + 1) % n];
+      const a = pts[I(i - 1)], b = pts[I(i + 1)];
       h[i] = Math.atan2(b.y - a.y, b.x - a.x);
     }
     return h;
   }
 
-  function curvatures(h) {
-    const n = h.length, k = new Float32Array(n);
+  function curvatures(h, closed) {
+    const n = h.length, k = new Float32Array(n), I = idxFn(n, closed);
     for (let i = 0; i < n; i++) {
-      k[i] = U.wrapAngle(h[(i + 3) % n] - h[(i - 3 + n) % n]) / (6 * SP);
+      const a = I(i - 3), b = I(i + 3);
+      k[i] = b === a ? 0 : U.wrapAngle(h[b] - h[a]) / ((b - a + (b < a ? n : 0)) * SP);
     }
     return k;
   }
 
-  function validate(pts, width) {
+  function validate(pts, width, closed) {
     const n = pts.length;
-    const h = headings(pts), k = curvatures(h);
+    const k = curvatures(headings(pts, closed), closed);
     for (let i = 0; i < n; i++) if (Math.abs(k[i]) > 1 / 120) return false;
     // birbirinden uzak pist parçaları yakınlaşmamalı (ızgara ile hızlı kontrol)
     const minSep = 2 * (width / 2 + MARGIN) + 40;
     const cell = minSep, grid = new Map();
     const key = (cx, cy) => cx * 73856093 ^ cy * 19349663;
     for (let i = 0; i < n; i++) {
-      const cx = Math.floor(pts[i].x / cell), cy = Math.floor(pts[i].y / cell);
-      const kk = key(cx, cy);
+      const kk = key(Math.floor(pts[i].x / cell), Math.floor(pts[i].y / cell));
       if (!grid.has(kk)) grid.set(kk, []);
       grid.get(kk).push(i);
     }
@@ -139,7 +189,8 @@ const Tracks = (() => {
         const list = grid.get(key(cx + ox, cy + oy));
         if (!list) continue;
         for (const j of list) {
-          let di = Math.abs(i - j); di = Math.min(di, n - di);
+          let di = Math.abs(i - j);
+          if (closed) di = Math.min(di, n - di);
           if (di < arcSkip) continue;
           if (Math.hypot(pts[j].x - p.x, pts[j].y - p.y) < minSep) return false;
         }
@@ -148,7 +199,8 @@ const Tracks = (() => {
     return true;
   }
 
-  function generatePoints(def) {
+  /* --- kapalı tur pisti --- */
+  function generateCircuit(def) {
     const [, , seed, R, K, vari, sx, sy, width] = def;
     for (let attempt = 0; attempt < 80; attempt++) {
       const r = U.rng(seed * 7919 + attempt * 104729);
@@ -162,21 +214,20 @@ const Tracks = (() => {
         ctrl.push({ x: x * Math.cos(rot) - y * Math.sin(rot), y: x * Math.sin(rot) + y * Math.cos(rot) });
       }
       if (r() < 0.5) ctrl.reverse();
-      const pts = resample(catmullRom(ctrl, 24), SP);
-      if (validate(pts, width)) return pts;
+      const pts = resample(catmullRom(ctrl, 24, true), SP, true);
+      if (validate(pts, width, true)) return rotateToStart(pts);
     }
-    // yedek: elips
     const pts = [];
     for (let i = 0; i < 200; i++) {
       const a = i / 200 * U.TAU;
       pts.push({ x: Math.cos(a) * R * 1.3 * sx, y: Math.sin(a) * R * 1.3 * sy });
     }
-    return resample(pts, SP);
+    return resample(pts, SP, true);
   }
 
-  /* Pistin en düz bölümünü başlangıç çizgisi yap */
+  /* Pistin en düz bölümünü başlangıç/bitiş çizgisi yap */
   function rotateToStart(pts) {
-    const n = pts.length, k = curvatures(headings(pts));
+    const n = pts.length, k = curvatures(headings(pts, true), true);
     let best = 0, bestV = Infinity;
     for (let i = 0; i < n; i += 2) {
       let m = 0;
@@ -186,11 +237,44 @@ const Tracks = (() => {
     return pts.slice(best).concat(pts.slice(0, best));
   }
 
+  /* --- açık sprint yolu: genel olarak bir yöne ilerleyen, kıvrımlı yol --- */
+  function generateSprint(def) {
+    const [, , seed, L, segLen, maxTurn, spread, width] = def;
+    for (let attempt = 0; attempt < 80; attempt++) {
+      const r = U.rng(seed * 7919 + attempt * 104729);
+      const mt = maxTurn * Math.max(0.4, 1 - attempt / 60);
+      const lim = spread * Math.PI;
+      // başlangıç düzlüğü (ızgara için)
+      const ctrl = [{ x: -450, y: 0 }, { x: 0, y: 0 }, { x: 550, y: 0 }];
+      let x = 550, y = 0, h = 0, len = 1000;
+      while (len < L - 1000) {
+        let nh = h + (r() * 2 - 1) * mt;
+        if (Math.abs(nh) > lim) nh = Math.sign(nh) * lim - (r() * 0.3) * Math.sign(nh);
+        h = nh;
+        const sl = segLen * (0.7 + r() * 0.6);
+        x += Math.cos(h) * sl; y += Math.sin(h) * sl;
+        ctrl.push({ x, y });
+        len += sl;
+      }
+      // bitiş düzlüğü ve yavaşlama alanı
+      for (let s = 0; s < 3; s++) { x += Math.cos(h) * 450; y += Math.sin(h) * 450; ctrl.push({ x, y }); }
+      let pts = resample(catmullRom(ctrl, 24, false), SP, false);
+      if (!validate(pts, width, false)) continue;
+      const rot = r() * U.TAU, c = Math.cos(rot), s = Math.sin(rot);
+      pts = pts.map(p => ({ x: p.x * c - p.y * s, y: p.x * s + p.y * c }));
+      return pts;
+    }
+    const pts = [];
+    for (let i = 0; i < L / SP; i++) pts.push({ x: i * SP, y: Math.sin(i / 60) * 300 });
+    return pts;
+  }
+
   /* Sadece önizleme için gerekenler (hafif) */
-  function getBasic(i) {
-    if (cache[i]) return cache[i];
-    const def = TRACK_DEFS[i];
-    const pts = rotateToStart(generatePoints(def));
+  function getBasic(kind, i) {
+    if (cache[kind][i]) return cache[kind][i];
+    const def = DEFS[kind][i];
+    const closed = kind === 'circuit';
+    const pts = closed ? generateCircuit(def) : generateSprint(def);
     const n = pts.length;
     const xs = new Float32Array(n), ys = new Float32Array(n);
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -199,30 +283,36 @@ const Tracks = (() => {
       minX = Math.min(minX, xs[j]); maxX = Math.max(maxX, xs[j]);
       minY = Math.min(minY, ys[j]); maxY = Math.max(maxY, ys[j]);
     }
-    const vari = def[5];
+    const level = closed ? def[5] : def[5] / 2;
+    const startIdx = closed ? 0 : SPRINT_START;
+    const finishIdx = closed ? 0 : n - SPRINT_RUNOFF;
     const t = {
-      index: i, name: def[0], themeId: def[1], theme: THEMES[def[1]],
-      width: def[8], half: def[8] / 2, barrier: def[8] / 2 + MARGIN,
-      n, xs, ys, spacing: SP, length: n * SP,
+      kind, index: i, closed, seed: def[2], themeId: def[1], theme: THEMES[def[1]],
+      width: def[closed ? 8 : 7], n, xs, ys, spacing: SP,
+      startIdx, finishIdx,
+      // yarış mesafesi (sprintte başlangıçtan bitişe, turda bir tur)
+      length: closed ? n * SP : (finishIdx - startIdx) * SP,
       bounds: { minX, minY, maxX, maxY },
-      difficulty: vari < 0.3 ? 'easy' : (vari < 0.45 ? 'medium' : 'hard'),   // i18n: 'level.<x>'
+      difficulty: level < 0.3 ? 'easy' : (level < 0.45 ? 'medium' : 'hard'),   // i18n: 'level.<x>'
       full: false
     };
-    cache[i] = t;
+    t.half = t.width / 2;
+    t.barrier = t.half + MARGIN;
+    t.wrap = idxFn(n, closed);
+    cache[kind][i] = t;
     return t;
   }
 
   /* Yarış için tüm verileri hazırla */
-  function get(i) {
-    const t = getBasic(i);
+  function get(kind, i) {
+    const t = getBasic(kind, i);
     if (t.full) return t;
     const n = t.n, pts = [];
     for (let j = 0; j < n; j++) pts.push({ x: t.xs[j], y: t.ys[j] });
-    t.heading = headings(pts);
-    t.curv = curvatures(t.heading);
+    t.heading = headings(pts, t.closed);
+    t.curv = curvatures(t.heading, t.closed);
     t.nx = new Float32Array(n); t.ny = new Float32Array(n);
     for (let j = 0; j < n; j++) { t.nx[j] = -Math.sin(t.heading[j]); t.ny[j] = Math.cos(t.heading[j]); }
-    t.sprintIdx = Math.floor(n * 0.7);
     t.barrierL = cleanOffset(t, -t.barrier);
     t.barrierR = cleanOffset(t, t.barrier);
     t.scenery = makeScenery(t);
@@ -238,10 +328,11 @@ const Tracks = (() => {
       const x = t.xs[i] + t.nx[i] * off, y = t.ys[i] + t.ny[i] * off;
       let ok = true;
       for (let j = -W; j <= W; j += 2) {
-        const k = (i + j + n) % n;
+        const k = t.wrap(i + j);
         if (Math.hypot(t.xs[k] - x, t.ys[k] - y) < lim) { ok = false; break; }
       }
-      if (ok) out.push(x, y);
+      // açık yolun uçları her zaman korunur (kapanış bariyeri buraya bağlanır)
+      if (ok || (!t.closed && (i === 0 || i === n - 1))) out.push(x, y);
     }
     return out;
   }
@@ -267,11 +358,11 @@ const Tracks = (() => {
       if (!grid.has(k)) grid.set(k, []);
       grid.get(k).push(j);
     }
-    const r = U.rng(TRACK_DEFS[t.index][2] * 31 + 7);
+    const r = U.rng(t.seed * 31 + 7);
     const list = t.theme.scenery;
     const total = list.reduce((s, e) => s + e[1], 0);
     const items = [];
-    const count = Math.floor(t.length / 45);
+    const count = Math.floor(t.n * SP / 45);
     for (let c = 0; c < count; c++) {
       const i = Math.floor(r() * t.n);
       const side = r() < 0.5 ? -1 : 1;
@@ -294,17 +385,11 @@ const Tracks = (() => {
     return items;
   }
 
-  /* En yakın pist noktası (tam tarama) */
-  function nearestIndex(t, x, y) {
-    let best = 0, bd = Infinity;
-    for (let j = 0; j < t.n; j++) {
-      const d = (t.xs[j] - x) ** 2 + (t.ys[j] - y) ** 2;
-      if (d < bd) { bd = d; best = j; }
-    }
-    return best;
-  }
-
-  return { get, getBasic, nearestIndex, count: TRACK_DEFS.length, SP };
+  return {
+    get, getBasic, SP,
+    count: kind => DEFS[kind].length,
+    def: (kind, i) => DEFS[kind][i]
+  };
 })();
 
-if (typeof module !== 'undefined') module.exports = { Tracks, THEMES, TRACK_DEFS };
+if (typeof module !== 'undefined') module.exports = { Tracks, THEMES, TRACK_DEFS, SPRINT_DEFS };
