@@ -1,4 +1,4 @@
-/* Web Car Racing Game - açık / koyu arayüz modu */
+/* Web Car Racing Game - light / dark interface mode */
 'use strict';
 
 const Theme = (() => {
@@ -6,7 +6,7 @@ const Theme = (() => {
   const listeners = [];
   const META = { dark: '#1b1f24', light: '#e3e6ea' };
 
-  /* Ayar 'auto' ise işletim sistemi/tarayıcı tercihine uyulur */
+  /* With the 'auto' setting the OS/browser preference is followed */
   function resolved() {
     const s = Settings.get('uiTheme');
     if (s === 'light' || s === 'dark') return s;
@@ -31,7 +31,7 @@ const Theme = (() => {
     if (mq.addEventListener) mq.addEventListener('change', handler);
     else if (mq.addListener) mq.addListener(handler);
   }
-  // sayfa çizilmeden önce uygula (yanıp sönme olmasın)
+  // apply before the page is painted (no flash)
   apply();
 
   return { apply, resolved, onChange };

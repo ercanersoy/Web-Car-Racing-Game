@@ -1,16 +1,16 @@
-/* Web Car Racing Game - Canvas 2D çizim
+/* Web Car Racing Game - Canvas 2D rendering
  *
- * Tüm görseller kuşbakışıdır (tam yukarıdan). Gölgeler dünyaya göre sabit bir ışık
- * yönüyle (sol üstten) düşer; nesne ya da araç dönse de gölge yönü değişmez.
+ * All graphics are top-down (seen from directly above). Shadows use a light direction that is
+ * fixed in the world (from the top left), so they never rotate with an object or a car.
  */
 'use strict';
 
 const Render = (() => {
-  const SHADOW_X = 6, SHADOW_Y = 8;             // dünya birimi, ışık sol üstten
+  const SHADOW_X = 6, SHADOW_Y = 8;             // world units, light from the top left
   const NO_SHADOW = { flower: 1, lamp: 1 };
   const bodyCache = {}, shadowCache = {};
 
-  /* ---------- çevre nesneleri (kuşbakışı) ---------- */
+  /* ---------- scenery objects (top-down) ---------- */
   function drawScenery(x, type) {
     const circle = (cx, cy, r, col) => { x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r, 0, U.TAU); x.fill(); };
     const poly = (pts, col) => {
@@ -29,7 +29,7 @@ const Render = (() => {
     const canopy = (c1, c2, c3) => { circle(0, 0, 30, c1); circle(-6, -6, 21, c2); circle(-10, -10, 10, c3); };
     switch (type) {
       case 'tree': canopy('#3f6a37', '#4b7a41', '#5c8a50'); break;
-      case 'tree_or': canopy('#9c5c37', '#b47344', '#c68d5c'); break;
+      case 'tree_orange': canopy('#9c5c37', '#b47344', '#c68d5c'); break;
       case 'tree_red': canopy('#7f3f33', '#97503e', '#ac6952'); break;
       case 'tree_dark': circle(0, 0, 26, '#1c3326'); circle(-5, -5, 17, '#243e2e'); break;
       case 'bush': circle(-8, 2, 13, '#4a7340'); circle(8, 0, 14, '#53804a'); circle(0, -6, 12, '#5f8c55'); break;
@@ -46,17 +46,17 @@ const Render = (() => {
         break;
       case 'snowrock':
         poly([-20, 4, -12, -13, 6, -17, 21, -3, 14, 13, -9, 15], '#6b7480');
-        poly([-15, -6, -11, -13, 6, -17, 15, -8, 4, -4, -8, 0], '#dfe4e8');   // tepedeki kar
+        poly([-15, -6, -11, -13, 6, -17, 15, -8, 4, -4, -8, 0], '#dfe4e8');   // snow on top
         break;
       case 'cactus':
-        // yukarıdan saguaro: gövde ve iki kol, ince sırt çizgileri
+        // saguaro from above: trunk, two arms and thin ribs
         circle(0, 0, 11, '#4f7d45'); circle(-13, 4, 6, '#4f7d45'); circle(12, -5, 6, '#4f7d45');
         x.strokeStyle = '#3f6837'; x.lineWidth = 1.2;
         for (let i = 0; i < 8; i++) { const a = i / 8 * U.TAU; x.beginPath(); x.moveTo(Math.cos(a) * 3, Math.sin(a) * 3); x.lineTo(Math.cos(a) * 10, Math.sin(a) * 10); x.stroke(); }
         circle(-2, -2, 3, '#6a9560');
         break;
       case 'pine':
-        // yukarıdan çam: yıldız biçimli dal katmanları, dal uçlarında kar
+        // pine from above: star-shaped branch layers with snow on the tips
         star(9, 30, 19, '#2c5640', 0.1);
         star(9, 21, 13, '#36664a', 0.45);
         star(7, 12, 7, '#417556', 0.2);
@@ -66,7 +66,7 @@ const Render = (() => {
         }
         break;
       case 'snowman':
-        // yukarıdan kardan adam: gövde, baş, havuç burun ve şapka
+        // snowman from above: body, head, carrot nose and hat
         circle(0, 0, 16, '#e3e7eb'); circle(-3, -3, 10, '#eceff2');
         x.fillStyle = '#c47a3d'; x.beginPath(); x.moveTo(-3, -9); x.lineTo(-1, -17); x.lineTo(1, -9); x.closePath(); x.fill();
         circle(-3, -3, 5, '#3a3d42');
@@ -76,19 +76,19 @@ const Render = (() => {
         for (let r = 5; r < 18; r += 5) { x.beginPath(); x.arc(0, 0, r, 0, U.TAU); x.stroke(); }
         break;
       case 'building':
-        // yukarıdan bina çatısı: korkuluk, çatı kaplaması, klima, havalandırma, çatı kapağı
-        x.fillStyle = '#3d434e'; x.fillRect(-36, -36, 72, 72);          // korkuluk
-        x.fillStyle = '#4f5663'; x.fillRect(-31, -31, 62, 62);          // çatı
+        // building roof from above: parapet, roofing, AC units, water tank, roof hatch
+        x.fillStyle = '#3d434e'; x.fillRect(-36, -36, 72, 72);          // parapet
+        x.fillStyle = '#4f5663'; x.fillRect(-31, -31, 62, 62);          // roof
         x.strokeStyle = 'rgba(0,0,0,0.12)'; x.lineWidth = 1;
         for (let i = -24; i <= 24; i += 12) { x.beginPath(); x.moveTo(-31, i); x.lineTo(31, i); x.stroke(); }
-        x.fillStyle = '#7a808a'; x.fillRect(-24, -24, 18, 14);          // klima ünitesi
+        x.fillStyle = '#7a808a'; x.fillRect(-24, -24, 18, 14);          // AC unit
         circle(-15, -17, 5, '#5c626c'); circle(-15, -17, 1.5, '#7a808a');
         x.fillStyle = '#7a808a'; x.fillRect(4, -24, 18, 14);
         circle(13, -17, 5, '#5c626c'); circle(13, -17, 1.5, '#7a808a');
-        circle(14, 14, 9, '#626976'); circle(14, 14, 6, '#6c7380');      // su deposu
-        x.fillStyle = '#353a44'; x.fillRect(-24, 8, 14, 14);           // çatı kapağı
+        circle(14, 14, 9, '#626976'); circle(14, 14, 6, '#6c7380');      // water tank
+        x.fillStyle = '#353a44'; x.fillRect(-24, 8, 14, 14);           // roof hatch
         x.fillStyle = '#454b56'; x.fillRect(-22, 10, 10, 10);
-        circle(28, -28, 2, '#a0524a');                                   // uyarı ışığı (loş)
+        circle(28, -28, 2, '#a0524a');                                   // warning light (dim)
         break;
       case 'lamp': {
         const g = x.createRadialGradient(0, 0, 2, 0, 0, 46);
@@ -119,7 +119,7 @@ const Render = (() => {
     return [body, shadow];
   }
 
-  /* ---------- pist ---------- */
+  /* ---------- track ---------- */
   function paths(t) {
     if (t.paths) return t.paths;
     const line = (xs, ys, n, closed) => {
@@ -142,7 +142,7 @@ const Render = (() => {
       right: flat(t.barrierR, t.closed)
     };
     if (!t.closed) {
-      // yolun iki ucunu kapatan bariyerler
+      // barriers closing both ends of the road
       const L = t.barrierL, R = t.barrierR;
       const caps = new Path2D();
       caps.moveTo(L[0], L[1]); caps.lineTo(R[0], R[1]);
@@ -153,7 +153,7 @@ const Render = (() => {
     return P;
   }
 
-  /* Dama desenli çizgi (bitiş) ya da düz çizgi (sprint başlangıcı) */
+  /* Checkered line (finish) or plain line (sprint start) */
   function drawLine(ctx, t, i, checkered) {
     const h = t.heading[i], x = t.xs[i], y = t.ys[i];
     ctx.save();
@@ -171,7 +171,7 @@ const Render = (() => {
     ctx.restore();
   }
 
-  /* Başlangıç ızgarası kutucukları */
+  /* Starting grid boxes */
   function drawGrid(ctx, race) {
     const t = race.track;
     ctx.strokeStyle = 'rgba(214,213,204,0.45)'; ctx.lineWidth = 2;
@@ -190,7 +190,7 @@ const Render = (() => {
   }
 
   /*
-   * Dünyayı çizer.
+   * Draws the world.
    * cam: { x, y, rot, zoom }  opts: { skip: car, mirror: bool, quality }
    */
   function world(ctx, race, cam, W, H, opts) {
@@ -209,7 +209,7 @@ const Render = (() => {
     const viewR = Math.hypot(W, H) / 2 / cam.zoom + 60;
     const vr2 = (viewR + 150) * (viewR + 150);
 
-    // zemin lekeleri
+    // ground patches
     if (q !== 'low' && !opts.mirror) {
       ctx.fillStyle = th.patch;
       ctx.beginPath();
@@ -222,8 +222,8 @@ const Render = (() => {
       ctx.fill();
     }
 
-    // çevre nesneleri: pistten ÖNCE çizilir; böylece bina, ağaç, gölge ya da lamba ışığı
-    // hiçbir zaman pistin, bariyerin veya araçların önüne geçmez (önce gölgeler, sonra gövdeler)
+    // scenery is drawn BEFORE the track, so a building, tree, shadow or lamp glow can never
+    // appear in front of the road, the barriers or the cars (shadows first, then bodies)
     if (!(opts.mirror && q === 'low')) {
       const items = [];
       for (const s of t.scenery) {
@@ -244,7 +244,7 @@ const Render = (() => {
       }
     }
     ctx.lineJoin = 'round';
-    // bariyerler (kesik çizgi yok: hızla kayan sık desen göz yorar)
+    // barriers (no dashes: fast-scrolling fine patterns strain the eyes)
     ctx.lineCap = 'round';
     ctx.strokeStyle = th.barrier; ctx.lineWidth = 11;
     ctx.stroke(P.left); ctx.stroke(P.right);
@@ -252,7 +252,7 @@ const Render = (() => {
     ctx.strokeStyle = th.barrier2; ctx.lineWidth = 3;
     ctx.stroke(P.left); ctx.stroke(P.right);
     if (P.caps) ctx.stroke(P.caps);
-    // bordürler (uzun, yumuşak renkli şeritler)
+    // curbs (long, soft-coloured stripes)
     const cap = t.closed ? 'round' : 'butt';
     ctx.lineCap = cap;
     ctx.lineWidth = t.width + 14;
@@ -260,22 +260,22 @@ const Render = (() => {
     ctx.stroke(P.center);
     ctx.strokeStyle = th.curbB; ctx.setLineDash([50, 50]); ctx.lineCap = 'butt';
     ctx.stroke(P.center);
-    // yol
+    // road
     ctx.setLineDash([]); ctx.lineCap = cap;
     ctx.lineWidth = t.width; ctx.strokeStyle = th.road;
     ctx.stroke(P.center);
-    // orta şerit
+    // centre line
     ctx.lineWidth = 3; ctx.strokeStyle = th.line; ctx.globalAlpha = 0.35;
     ctx.setLineDash([50, 90]); ctx.lineCap = 'butt';
     ctx.stroke(P.center);
     ctx.setLineDash([]); ctx.globalAlpha = 1;
 
-    // başlangıç / bitiş
+    // start / finish
     if (t.closed) drawLine(ctx, t, 0, true);
     else { drawLine(ctx, t, t.startIdx, false); drawLine(ctx, t, t.finishIdx, true); }
     if (!opts.mirror) drawGrid(ctx, race);
 
-    // fren izleri
+    // skid marks
     if (race.skidCount && !opts.mirror) {
       ctx.strokeStyle = 'rgba(20,20,20,0.22)'; ctx.lineWidth = 4; ctx.lineCap = 'round';
       ctx.beginPath();
@@ -289,7 +289,7 @@ const Render = (() => {
       ctx.stroke();
     }
 
-    // parçacıklar
+    // particles
     if (race.particles.length && !opts.mirror) {
       for (const p of race.particles) {
         ctx.globalAlpha = (p.life / p.max) * 0.45;
@@ -300,7 +300,7 @@ const Render = (() => {
       ctx.globalAlpha = 1;
     }
 
-    // araçlar: önce tüm gölgeler, sonra gövdeler
+    // cars: all shadows first, then the bodies
     const visible = [];
     for (const car of race.cars) {
       if (car === opts.skip) continue;
@@ -339,7 +339,7 @@ const Render = (() => {
     ctx.restore();
   }
 
-  /* ---------- harita önizlemeleri ---------- */
+  /* ---------- map previews ---------- */
   function fitTransform(t, W, H, pad) {
     const b = t.bounds;
     const s = Math.min((W - pad * 2) / Math.max(1, b.maxX - b.minX), (H - pad * 2) / Math.max(1, b.maxY - b.minY));
@@ -369,7 +369,7 @@ const Render = (() => {
     else { dot(t.startIdx, '#8fbf7a', '#2c2f34'); dot(t.finishIdx, '#d6d5cc', '#2c2f34'); }
   }
 
-  /* Mini harita arka planı (bir kez çizilir) */
+  /* Minimap background (drawn once) */
   function minimapBase(t, size, outer, inner) {
     const c = U.makeCanvas(size, size), x = c.getContext('2d');
     const f = fitTransform(t, size, size, 12 * size / 150);
@@ -381,7 +381,7 @@ const Render = (() => {
     return { canvas: c, s: f.s, ox: f.ox, oy: f.oy };
   }
 
-  /* Menüdeki harita küçük resmi */
+  /* Map thumbnail in the menu */
   function thumbnail(canvas, t) {
     const x = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
     x.fillStyle = t.theme.ground; x.fillRect(0, 0, W, H);

@@ -1,4 +1,4 @@
-/* Web Car Racing Game - oyun döngüsü ve akış kontrolü */
+/* Web Car Racing Game - game loop and flow control */
 'use strict';
 
 const Game = (() => {
@@ -12,13 +12,13 @@ const Game = (() => {
   let menuMusicOn = false;
 
   function init() {
-    // dil: ilk açılışta tarayıcı dilinden seç; ABD İngilizcesinde varsayılan birim mil/sa
+    // language: pick from the browser language on first run; default unit is mph for US English
     if (!I18N.NAMES[Settings.get('lang')]) {
       Settings.set('lang', I18N.detect());
       if (Settings.firstRun && Settings.get('lang') === 'en-US') Settings.set('units', 'mph');
     }
     canvas = U.$('game');
-    // tema değişince göstergeler yeniden çizilsin (sistem teması değişince de)
+    // redraw the HUD when the theme changes (including system theme changes)
     Theme.onChange(() => { Hud.applySettings(); if (race && !running) draw(0); });
     ctx = canvas.getContext('2d', { alpha: false });
     Input.init();
@@ -35,7 +35,7 @@ const Game = (() => {
 
     Input.on('active', () => running && !paused);
     Input.on('pause', code => {
-      // menülerde Esc bir önceki ekrana döner
+      // in menus, Esc returns to the previous screen
       const cur = UI.current;
       if (code !== 'Escape' && (cur === 'settings' || cur === 'new' || cur === 'about')) return;
       if (cur === 'settings') { U.$('settings-back').click(); return; }
@@ -64,7 +64,7 @@ const Game = (() => {
       }
     });
 
-    // menü müziği ilk kullanıcı etkileşiminde başlar (tarayıcı kuralı)
+    // menu music starts on the first user interaction (browser autoplay rule)
     const firstGesture = () => {
       if (!menuMusicOn && !race) { Sound.ensure(); Sound.playMusic(7, 'menu'); menuMusicOn = true; }
       window.removeEventListener('pointerdown', firstGesture);
@@ -119,7 +119,7 @@ const Game = (() => {
         else if (car.lapsDone < race.laps) Hud.message(T('hud.lapN', { n: car.lapsDone + 1 }) + (isBest ? T('hud.bestLapTag') : ''), 1.4, true);
       },
       onPlayerFinish: car => {
-        const pos = race.finishOrder.indexOf(car) + 1;   // aynı adımda geçilen araçlar da doğru sayılır
+        const pos = race.finishOrder.indexOf(car) + 1;   // also correct when cars cross the line in the same step
         Hud.message(race.cars.length > 1 ? T('hud.finishedPos', { p: I18N.ordinal(pos) }) : T('hud.finish'), 3.5, true);
         Sound.beep(660, 0.15, 'square', 0.2);
         setTimeout(() => Sound.beep(990, 0.4, 'square', 0.2), 160);
@@ -129,7 +129,7 @@ const Game = (() => {
         const rec = UI.saveRecord(opts, me);
         Sound.engineStop();
         setTimeout(() => {
-          if (race !== thisRace) return;   // bu arada yeni yarış başlatıldı / menüye dönüldü
+          if (race !== thisRace) return;   // a new race was started / we returned to the menu meanwhile
           running = false;
           stopLoop();
           Hud.stop();
@@ -157,7 +157,7 @@ const Game = (() => {
 
   function pause() {
     paused = true;
-    stopLoop();            // duraklatılmışken hiç kare çizilmez (kaynak tasarrufu)
+    stopLoop();            // no frames are drawn while paused (saves resources)
     Input.clear();
     Sound.suspend();
     UI.show('pause');
@@ -193,7 +193,7 @@ const Game = (() => {
     cam.zoom += (zt - cam.zoom) * Math.min(1, dt * 2);
     if (Settings.get('camera') === 'rotate') {
       const target = -Math.PI / 2 - p.angle;
-      cam.rot += U.wrapAngle(target - cam.rot) * Math.min(1, dt * 5);   // yumuşak dönüş: baş dönmesini azaltır
+      cam.rot += U.wrapAngle(target - cam.rot) * Math.min(1, dt * 5);   // smooth rotation reduces motion sickness
       const h = -Math.PI / 2 - cam.rot;
       const ahead = canvas.height * 0.2 / cam.zoom;
       cam.x = p.x + Math.cos(h) * ahead;

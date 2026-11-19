@@ -8,18 +8,18 @@
   <title>Web Car Racing Game</title>
   <link rel="stylesheet" href="css/style.css">
   <script>
-    /* Tema ilk çizimden önce uygulanır (açılışta yanlış renk görünmesin) */
+    /* The theme is applied before the first paint (no wrong colours on load) */
     try {
       var th = (JSON.parse(localStorage.getItem('wcrg.settings.v1') || '{}') || {}).uiTheme;
       if (th !== 'light' && th !== 'dark') th = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', th);
-    } catch (e) { /* depolama yok: koyu tema */ }
+    } catch (e) { /* storage unavailable: dark theme */ }
   </script>
 </head>
 <body>
   <canvas id="game"></canvas>
 
-  <!-- Oyun içi gösterge paneli -->
+  <!-- In-game HUD -->
   <div id="hud" class="hidden">
     <div class="hud-tl">
       <div class="hud-box"><span class="lbl" data-i18n="hud.pos"></span><span id="hud-pos" class="big">1/1</span></div>
@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <!-- Ana menü -->
+  <!-- Main menu -->
   <section id="scr-main" class="screen">
     <div class="panel main-panel">
       <h1 class="logo">WEB CAR<span>RACING GAME</span></h1>
@@ -78,7 +78,7 @@
     </div>
   </section>
 
-  <!-- Yeni oyun -->
+  <!-- New game -->
   <section id="scr-new" class="screen hidden">
     <div class="panel wide">
       <header class="panel-head">
@@ -107,9 +107,9 @@
           <div class="opt">
             <label data-i18n="new.difficulty"></label>
             <div class="seg" id="opt-diff">
-              <button data-v="kolay" data-i18n="diff.kolay"></button>
-              <button data-v="orta" data-i18n="diff.orta"></button>
-              <button data-v="zor" data-i18n="diff.zor"></button>
+              <button data-v="easy" data-i18n="diff.easy"></button>
+              <button data-v="medium" data-i18n="diff.medium"></button>
+              <button data-v="hard" data-i18n="diff.hard"></button>
             </div>
           </div>
         </div>
@@ -130,7 +130,7 @@
     </div>
   </section>
 
-  <!-- Ayarlar -->
+  <!-- Settings -->
   <section id="scr-settings" class="screen hidden">
     <div class="panel">
       <header class="panel-head">
@@ -220,7 +220,7 @@
     </div>
   </section>
 
-  <!-- Hakkında -->
+  <!-- About -->
   <section id="scr-about" class="screen hidden">
     <div class="panel">
       <header class="panel-head">
@@ -242,7 +242,7 @@
     </div>
   </section>
 
-  <!-- Duraklatma -->
+  <!-- Pause -->
   <section id="scr-pause" class="screen hidden dim">
     <div class="panel narrow">
       <h2 data-i18n="pause.title"></h2>
@@ -255,7 +255,7 @@
     </div>
   </section>
 
-  <!-- Sonuçlar -->
+  <!-- Results -->
   <section id="scr-results" class="screen hidden dim">
     <div class="panel wide">
       <header class="panel-head center">

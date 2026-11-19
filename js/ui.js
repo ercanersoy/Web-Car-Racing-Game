@@ -1,4 +1,4 @@
-/* Web Car Racing Game - menüler ve ekranlar */
+/* Web Car Racing Game - menus and screens */
 'use strict';
 
 const UI = (() => {
@@ -8,13 +8,12 @@ const UI = (() => {
   const screens = ['main', 'new', 'settings', 'about', 'pause', 'results'];
   let current = 'main';
   let settingsBack = 'main';
-  const mapCards = { circuit: null, sprint: null };   // haritalar türüne göre bir kez oluşturulur
+  const mapCards = { circuit: null, sprint: null };   // map cards are created once per map kind
   let lastResults = null;
-  const sel = sanitize(U.load(SEL_KEY, {}));
 
-  /* Kayıtlı seçimler bozuk/eski olsa da geçerli değerlere zorla */
+  /* Force saved selections to valid values even if they are corrupt or outdated */
   function sanitize(o) {
-    const d = { mode: 'laps', laps: 3, cars: 6, difficulty: 'orta', model: 0, color: 0, track: 0, sprintTrack: 0 };
+    const d = { mode: 'laps', laps: 3, cars: 6, difficulty: 'medium', model: 0, color: 0, track: 0, sprintTrack: 0 };
     const int = (v, a, b, def) => (Number.isInteger(v) && v >= a && v <= b) ? v : def;
     return {
       mode: o.mode === 'sprint' ? 'sprint' : 'laps',
@@ -28,6 +27,8 @@ const UI = (() => {
     };
   }
 
+  const sel = sanitize(U.load(SEL_KEY, {}));
+
   const t = (k, p) => I18N.t(k, p);
   const kindOfMode = mode => (mode === 'sprint' ? 'sprint' : 'circuit');
   const trackName = (kind, i) => t((kind === 'sprint' ? 'sprint.' : 'track.') + i);
@@ -39,7 +40,7 @@ const UI = (() => {
     current = name;
     if (name === 'new') buildNewGame();
     if (name === 'settings') fillSettings();
-    // Sonuç ekranında otomatik odak yok: yarış biterken basılı tutulan Boşluk tuşu düğmeye tıklamasın
+    // No auto-focus on the results screen: a Space key held at the finish must not click a button
     if (name !== 'settings' && name !== 'results') {
       const scr = U.$('scr-' + name);
       const first = scr.querySelector('.btn.primary') || scr.querySelector('.btn');
@@ -52,7 +53,7 @@ const UI = (() => {
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   }
 
-  /* ---------- dil ---------- */
+  /* ---------- language ---------- */
   function fillLangSelects() {
     document.querySelectorAll('.lang-select').forEach(selEl => {
       if (!selEl.options.length) {
@@ -67,19 +68,19 @@ const UI = (() => {
     });
   }
 
-  /* Ana menüdeki ve ayarlardaki tema seçicileri */
+  /* Theme selectors in the main menu and in settings */
   function fillThemeSelects() {
     document.querySelectorAll('.theme-select').forEach(el => {
       if (!el.dataset.bound) {
         el.dataset.bound = '1';
-        // ayarlar ekranındaki seçici SET_KEYS ile bağlıdır; ana menüdekini burada bağla
+        // the settings selector is bound via SET_KEYS; bind the main menu one here
         if (el.id !== 's-uiTheme') el.addEventListener('change', () => Settings.set('uiTheme', el.value));
       }
       el.value = Settings.get('uiTheme');
     });
   }
 
-  /* Dil değişince statik metinleri ve açık ekranın dinamik içeriğini yenile */
+  /* On language change, refresh static texts and the dynamic content of the open screen */
   function relocalize() {
     I18N.apply();
     fillLangSelects();
@@ -93,9 +94,9 @@ const UI = (() => {
     if (current === 'results' && lastResults) showResults(lastResults.results, lastResults.opts, lastResults.rec);
   }
 
-  /* ---------- rekorlar ---------- */
+  /* ---------- records ---------- */
   function records() { return U.load(REC_KEY, {}); }
-  /* tur yarışı: harita + tur sayısı; kısa yarış: sprint haritası */
+  /* lap race: map + lap count; sprint: sprint map */
   function recKey(o) { return o.mode === 'sprint' ? 's' + o.trackIndex : 'c' + o.trackIndex + ':' + o.laps; }
   function saveRecord(o, result) {
     const recs = records();
@@ -113,7 +114,7 @@ const UI = (() => {
     return out;
   }
 
-  /* ---------- yeni oyun ---------- */
+  /* ---------- new game ---------- */
   function seg(id, value, onPick) {
     const el = U.$(id);
     el.querySelectorAll('button').forEach(b => {
@@ -220,7 +221,7 @@ const UI = (() => {
       localizeMapCard(b, kind, i);
       cards.push(b);
     }
-    // küçük resimleri parça parça üret (arayüz donmasın)
+    // render thumbnails in small time slices so the UI does not freeze
     let i = 0;
     const step = () => {
       const t0 = performance.now();
@@ -271,7 +272,7 @@ const UI = (() => {
     };
   }
 
-  /* ---------- ayarlar ---------- */
+  /* ---------- settings ---------- */
   const SET_KEYS = ['playerName', 'uiTheme', 'music', 'musicVolume', 'sfx', 'sfxVolume', 'engineSound', 'quality', 'fpsLimit', 'showFps',
     'camera', 'units', 'speedo', 'mirror', 'minimap', 'standings', 'touch'];
 
@@ -311,7 +312,7 @@ const UI = (() => {
 
   function openSettings(from) { settingsBack = from; show('settings'); }
 
-  /* ---------- sonuçlar ---------- */
+  /* ---------- results ---------- */
   function showResults(results, opts, rec) {
     lastResults = { results, opts, rec };
     const me = results.find(r => r.isPlayer);

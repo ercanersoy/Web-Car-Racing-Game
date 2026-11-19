@@ -1,4 +1,4 @@
-/* Web Car Racing Game - gösterge paneli: hız göstergesi, dikiz aynası, mini harita, sıralama */
+/* Web Car Racing Game - HUD: speedometer, rear-view mirror, minimap, standings */
 'use strict';
 
 const Hud = (() => {
@@ -10,7 +10,7 @@ const Hud = (() => {
   let mirrorFrame = 0;
   const cache = {};
 
-  /* Hız göstergesi ve mini harita renkleri: açık / koyu tema */
+  /* Speedometer and minimap colours for the light / dark theme */
   const PALETTE = {
     dark: {
       dialBg: 'rgba(27,31,36,0.72)', ring: '#3a414d', tick: '#c5cbd2', red: '#c4685a', num: '#98a2b0',
@@ -80,7 +80,7 @@ const Hud = (() => {
     els.spdUnit.textContent = I18N.t(Settings.get('units') === 'mph' ? 'unit.mph' : 'unit.kmh');
     if (race) els.lapLbl.textContent = I18N.t(race.mode === 'sprint' ? 'hud.dist' : 'hud.lap');
     els.hud.classList.toggle('sprint', !!race && race.mode === 'sprint');
-    for (const k in cache) delete cache[k];   // dil/birim değişince metinler yeniden yazılsın
+    for (const k in cache) delete cache[k];   // rewrite texts after a language/unit change
     dialKey = ''; miniBase = null;
   }
 
@@ -90,7 +90,7 @@ const Hud = (() => {
     msgTimer = dur || 0;
   }
 
-  /* hız birimi dönüşümü: dünya birimi/sn -> km/sa */
+  /* speed unit conversion: world units/s -> km/h (or mph) */
   function speedValue(v) {
     const kmh = Math.abs(v) * 0.42;
     return Settings.get('units') === 'mph' ? kmh * 0.6214 : kmh;
@@ -135,7 +135,7 @@ const Hud = (() => {
     const k = W / 170, cx = W / 2, cy = H / 2, P = pal();
     const v = Math.min(maxV, speedValue(car.vf));
     const a = Math.PI * 0.75 + Math.PI * 1.5 * v / maxV;
-    // devir yayı
+    // rpm arc
     sctx.strokeStyle = P.arc; sctx.lineWidth = 4 * k;
     sctx.beginPath(); sctx.arc(cx, cy, W / 2 - 18 * k, Math.PI * 0.75, Math.PI * 0.75 + Math.PI * 1.5 * car.rpm * 0.999); sctx.stroke();
     sctx.strokeStyle = P.needle; sctx.lineWidth = 3 * k; sctx.lineCap = 'round';
@@ -166,7 +166,7 @@ const Hud = (() => {
     if (!Settings.get('mirror')) return;
     const q = Settings.get('quality');
     mirrorFrame++;
-    if (q === 'low' && mirrorFrame % 2) return;  // düşük kalitede yarım hızda güncelle
+    if (q === 'low' && mirrorFrame % 2) return;  // update at half rate on low quality
     fit(mirror);
     const W = mirror.width, H = mirror.height;
     const zoom = H / 300;

@@ -1,6 +1,6 @@
-/* Web Car Racing Game - sade arayüz stilleri */
-/* Göz yormayan palet: saf siyah/beyaz yok, doygunluğu düşük vurgu rengi, ılımlı kontrast */
-/* Koyu tema (varsayılan) */
+/* Web Car Racing Game - simple interface styles */
+/* Easy-on-the-eyes palette: no pure black/white, low-saturation accent, moderate contrast */
+/* Dark theme (default) */
 :root {
   color-scheme: dark;
   --bg: #1b1f24;
@@ -21,7 +21,7 @@
   --shadow: rgba(0, 0, 0, 0.3);
   --bar-bg: #15181d;
   --me-row: rgba(212, 178, 94, 0.12);
-  /* oyun içi gösterge paneli */
+  /* in-game HUD */
   --hud-bg: rgba(27, 31, 36, 0.72);
   --hud-bg2: rgba(27, 31, 36, 0.66);
   --hud-text: #dcdfe3;
@@ -40,7 +40,7 @@
   --radius: 10px;
 }
 
-/* Açık tema: kırık beyaz zemin, yumuşak gri tonlar, koyu ama siyah olmayan metin */
+/* Light theme: off-white background, soft greys, dark but not black text */
 :root[data-theme="light"] {
   color-scheme: light;
   --bg: #e3e6ea;
@@ -91,7 +91,7 @@ html, body {
 
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: var(--bg); }
 
-/* ---------- ekranlar ---------- */
+/* ---------- screens ---------- */
 .screen {
   position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 16px; z-index: 10;
@@ -131,7 +131,7 @@ h3 small { text-transform: none; letter-spacing: 0; color: var(--text); font-wei
 .hint { margin: 22px 0 0; color: var(--muted); font-size: 12px; }
 .copy-line { margin: 8px 0 0; color: var(--faint); font-size: 11px; }
 
-/* ---------- düğmeler ---------- */
+/* ---------- buttons ---------- */
 .menu-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
 .btn {
   appearance: none; border: 1px solid var(--line); background: var(--panel2); color: var(--text);
@@ -153,7 +153,7 @@ h3 small { text-transform: none; letter-spacing: 0; color: var(--text); font-wei
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button.on { background: var(--accent); color: var(--accent-ink); }
 
-/* ---------- yeni oyun ---------- */
+/* ---------- new game ---------- */
 .opt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 18px; margin-top: 10px; }
 .opt label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 .opt label b { color: var(--text); }
@@ -190,7 +190,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .map-card .rec { color: var(--accent-text); font-size: 11px; min-height: 15px; }
 .summary { margin-right: auto; color: var(--muted); font-size: 13px; }
 
-/* ---------- ayarlar ---------- */
+/* ---------- settings ---------- */
 .settings { max-width: 520px; margin: 0 auto; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--row-line); }
 .set-row label { flex: 1; }
@@ -210,14 +210,14 @@ kbd {
 .note { color: var(--muted); font-size: 12px; }
 .set-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
 
-/* ---------- hakkında ---------- */
+/* ---------- about ---------- */
 .about { text-align: left; }
 .about ul { padding-left: 20px; margin: 0; }
 .about li { margin: 3px 0; }
 .copyright { background: var(--panel2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 6px; }
 .version { color: var(--muted); font-size: 12px; }
 
-/* ---------- sonuçlar ---------- */
+/* ---------- results ---------- */
 .res-info { text-align: center; color: var(--muted); margin: 8px 0 12px; }
 .res-info b { color: var(--text); }
 .table-wrap { overflow-x: auto; }
@@ -286,7 +286,7 @@ kbd {
   font-size: 13px; cursor: pointer;
 }
 
-/* dokunmatik */
+/* touch controls */
 #touch { position: absolute; inset: auto 0 0 0; height: 0; pointer-events: none; }
 #touch .t-left, #touch .t-right { position: absolute; bottom: 18px; display: flex; gap: 12px; pointer-events: auto; }
 #touch .t-left { left: 175px; }
@@ -299,7 +299,7 @@ kbd {
 #touch .t-gas { background: rgba(110, 160, 115, 0.35); }
 #touch .t-brake { background: rgba(170, 90, 80, 0.35); }
 
-/* yatay telefon / alçak pencere: göstergeler küçülsün, birbirinin üstüne binmesin */
+/* landscape phone / short window: shrink the HUD so its elements do not overlap */
 @media (max-height: 520px) {
   #standings { display: none; }
   .hud-row { display: none; }

@@ -1,4 +1,4 @@
-/* Web Car Racing Game - klavye, oyun kolu ve dokunmatik giriş */
+/* Web Car Racing Game - keyboard, gamepad and touch input */
 'use strict';
 
 const Input = (() => {
@@ -6,13 +6,13 @@ const Input = (() => {
   const touch = { left: false, right: false, gas: false, brake: false };
   const state = { steer: 0, throttle: 0, brake: 0, hand: false, reset: false };
   let resetLatch = false;
-  const handlers = {};   // tek seferlik tuş olayları: pause, camera, music
+  const handlers = {};   // one-shot key events: pause, camera, music
 
   const GAME_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'];
 
   function init() {
     window.addEventListener('keydown', e => {
-      // Metin kutusu ya da açılır liste odaktayken yazılan tuşlar oyuna gitmez; Esc yine de geri döner
+      // Keys typed into a text box or dropdown do not reach the game; Esc still goes back
       const tg = e.target, tag = tg && tg.tagName;
       const typing = (tag === 'INPUT' && tg.type === 'text') || tag === 'SELECT' || tag === 'TEXTAREA';
       if (typing) {
@@ -53,7 +53,7 @@ const Input = (() => {
     let reset = !!keys.KeyR;
     let analog = false;
 
-    // oyun kolu (varsa)
+    // gamepad (if any)
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const p of pads) {
       if (!p) continue;
@@ -72,7 +72,7 @@ const Input = (() => {
       break;
     }
 
-    // klavyede direksiyonu yumuşat
+    // smooth keyboard steering
     if (analog) state.steer = target;
     else {
       const rate = target === 0 ? 8 : (Math.sign(target) !== Math.sign(state.steer) ? 10 : 5);
