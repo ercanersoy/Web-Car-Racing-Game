@@ -113,7 +113,8 @@ const Game = (() => {
         else if (car.lapsDone < race.laps) Hud.message(T('hud.lapN', { n: car.lapsDone + 1 }) + (isBest ? T('hud.bestLapTag') : ''), 1.4, true);
       },
       onPlayerFinish: car => {
-        Hud.message(race.cars.length > 1 ? T('hud.finishedPos', { p: I18N.ordinal(car.rank) }) : T('hud.finish'), 3.5, true);
+        const pos = race.finishOrder.indexOf(car) + 1;   // aynı adımda geçilen araçlar da doğru sayılır
+        Hud.message(race.cars.length > 1 ? T('hud.finishedPos', { p: I18N.ordinal(pos) }) : T('hud.finish'), 3.5, true);
         Sound.beep(660, 0.15, 'square', 0.2);
         setTimeout(() => Sound.beep(990, 0.4, 'square', 0.2), 160);
       },

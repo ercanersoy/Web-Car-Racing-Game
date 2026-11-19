@@ -337,19 +337,27 @@ const Tracks = (() => {
     return out;
   }
 
-  function nearestDist(t, x, y, grid) {
-    let best = Infinity;
+  /* En yakın pist noktası: { d: uzaklık, j: indeks } */
+  function nearestPoint(t, x, y, grid) {
+    let best = Infinity, bj = -1;
     const cx = Math.floor(x / 200), cy = Math.floor(y / 200);
     for (let ox = -3; ox <= 3; ox++) for (let oy = -3; oy <= 3; oy++) {
       const list = grid.get((cx + ox) + ',' + (cy + oy));
       if (!list) continue;
       for (const j of list) {
         const d = Math.hypot(t.xs[j] - x, t.ys[j] - y);
-        if (d < best) best = d;
+        if (d < best) { best = d; bj = j; }
       }
     }
-    return best;
+    return { d: best, j: bj };
   }
+
+  /* Nesnelerin yukarıdan kapladığı alanın yarıçapı (sprite biriminde; dünyada × ölçek).
+     Bina kare olduğundan köşegenin yarısı alınır. */
+  const FOOTPRINT = {
+    tree: 30, tree_or: 30, tree_red: 28, tree_dark: 26, bush: 22, drybush: 16, flower: 13,
+    rock: 21, snowrock: 21, cactus: 19, pine: 30, snowman: 16, hay: 18, building: 51, lamp: 6
+  };
 
   function makeScenery(t) {
     const grid = new Map();
@@ -362,16 +370,55 @@ const Tracks = (() => {
     const list = t.theme.scenery;
     const total = list.reduce((s, e) => s + e[1], 0);
     const items = [];
+    // yerleştirilen nesneler için ızgara: çakışma denetimi hızlı olsun
+    const CELL = 140, placed = new Map();
+    const cellKey = (cx, cy) => cx + ',' + cy;
+    const overlaps = (x, y, rad) => {
+      const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL);
+      for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
+        const cell = placed.get(cellKey(cx + ox, cy + oy));
+        if (!cell) continue;
+        for (const o of cell) {
+          if (Math.hypot(o.x - x, o.y - y) < o.rad + rad + 4) return true;
+        }
+      }
+      return false;
+    };
     const count = Math.floor(t.n * SP / 45);
-    for (let c = 0; c < count; c++) {
-      const i = Math.floor(r() * t.n);
-      const side = r() < 0.5 ? -1 : 1;
-      const dist = t.barrier + 35 + Math.pow(r(), 1.6) * 520;
-      const x = t.xs[i] + t.nx[i] * side * dist, y = t.ys[i] + t.ny[i] * side * dist;
-      if (nearestDist(t, x, y, grid) < t.barrier + 25) continue;
+    for (let attempt = 0; attempt < count * 3 && items.length < count; attempt++) {
       let w = r() * total, type = list[0][0];
       for (const e of list) { w -= e[1]; if (w <= 0) { type = e[0]; break; } }
-      items.push({ x, y, type, s: 0.75 + r() * 0.6, rot: r() * U.TAU });
+      const i = Math.floor(r() * t.n);
+      const side = r() < 0.5 ? -1 : 1;
+      const sc = type === 'building' ? 0.8 + r() * 0.45 : 0.75 + r() * 0.6;
+      const rad = FOOTPRINT[type] * sc;
+      // sokak lambaları yol kenarına dizilir; diğerleri yoldan farklı uzaklıklara dağılır
+      const dist = type === 'lamp'
+        ? t.barrier + 28 + r() * 12
+        : t.barrier + 20 + rad + Math.pow(r(), 1.6) * 520;
+      const x = t.xs[i] + t.nx[i] * side * dist, y = t.ys[i] + t.ny[i] * side * dist;
+      // nesnenin kenarı bariyere ya da pistin başka bir bölümüne taşmamalı
+      const np = nearestPoint(t, x, y, grid);
+      if (np.d < t.barrier + 18 + rad) continue;
+      if (overlaps(x, y, rad)) continue;
+      // binalar en yakın yola paralel durur; yuvarlak nesnelerde açı yalnızca çeşitlilik içindir
+      let rot = r() * U.TAU;
+      if (type === 'building') {
+        let j = np.j;
+        if (j < 0) {   // ızgara aralığının dışında kalan uzak bina: tüm pisti tara
+          let bd = Infinity;
+          for (let q = 0; q < t.n; q++) {
+            const d = (t.xs[q] - x) ** 2 + (t.ys[q] - y) ** 2;
+            if (d < bd) { bd = d; j = q; }
+          }
+        }
+        rot = t.heading[j];
+      }
+      const item = { x, y, type, s: sc, rot, rad };
+      items.push(item);
+      const k = cellKey(Math.floor(x / CELL), Math.floor(y / CELL));
+      if (!placed.has(k)) placed.set(k, []);
+      placed.get(k).push(item);
     }
     // zemin lekeleri
     const patches = [];

@@ -92,6 +92,7 @@ class Race {
       this.cars.push(car);
     }
     this.player = this.cars[this.cars.length - 1];
+    this.rank();   // canlı sıralama geri sayım sırasında da görünsün
   }
 
   /* --- yapay zekâ için viraj güvenli hız tablosu --- */
@@ -125,7 +126,8 @@ class Race {
     if (this.state === 'countdown') {
       this.countdown -= dt;
       const c = Math.ceil(this.countdown);
-      if (c !== this.lastCount && c <= 3) {
+      // yalnızca 3-2-1; "BAŞLA" aşağıda bir kez bildirilir
+      if (c >= 1 && c !== this.lastCount && c <= 3) {
         this.lastCount = c;
         if (this.hooks.onCountdown) this.hooks.onCountdown(c);
       }

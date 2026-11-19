@@ -4,7 +4,7 @@
 const UI = (() => {
   const SEL_KEY = 'wcrg.newgame.v1';
   const REC_KEY = 'wcrg.records.v1';
-  const VERSION = '1.2.0';
+  const VERSION = '1.2.1';
   const screens = ['main', 'new', 'settings', 'about', 'pause', 'results'];
   let current = 'main';
   let settingsBack = 'main';
@@ -210,11 +210,12 @@ const UI = (() => {
     // küçük resimleri parça parça üret (arayüz donmasın)
     let i = 0;
     const step = () => {
-      const end = Math.min(cards.length, i + 3);
-      for (; i < end; i++) {
+      const t0 = performance.now();
+      while (i < cards.length && performance.now() - t0 < 12) {
         Render.thumbnail(cards[i].querySelector('canvas'), Tracks.getBasic(kind, i));
         cards[i].dataset.ready = '1';
         localizeMapCard(cards[i], kind, i);
+        i++;
       }
       if (i < cards.length) setTimeout(step, 0);
     };

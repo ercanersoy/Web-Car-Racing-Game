@@ -123,7 +123,7 @@ const I18N = (() => {
     'hud.finalLap': 'SON TUR!',
     'hud.lapN': 'TUR {n}',
     'hud.bestLapTag': ' · EN İYİ TUR',
-    'hud.finishedPos': '{p}. SIRADA BİTİRDİN!',
+    'hud.finishedPos': '{p} SIRADA BİTİRDİN!',   // {p} zaten "2." biçiminde gelir
     'hud.finish': 'BİTİŞ!',
     'hud.camRotate': 'Kamera: dönen', 'hud.camFixed': 'Kamera: sabit',
     'hud.musicOn': 'Müzik açık', 'hud.musicOff': 'Müzik kapalı',
