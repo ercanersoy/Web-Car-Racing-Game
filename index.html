@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="description" content="Web Car Racing Game - a single-player, dependency-free car racing game that runs in the browser.">
+  <meta name="theme-color" content="#14171c">
+  <title>Web Car Racing Game</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- Oyun içi gösterge paneli -->
+  <div id="hud" class="hidden">
+    <div class="hud-tl">
+      <div class="hud-box"><span class="lbl" data-i18n="hud.pos"></span><span id="hud-pos" class="big">1/1</span></div>
+      <div class="hud-box"><span class="lbl" id="hud-lap-lbl"></span><span id="hud-lap" class="big">1/3</span></div>
+    </div>
+    <div class="hud-tr">
+      <div class="hud-box"><span class="lbl" data-i18n="hud.time"></span><span id="hud-time" class="mid">0:00.0</span></div>
+      <div class="hud-row"><span data-i18n="hud.last"></span><b id="hud-last">--</b></div>
+      <div class="hud-row"><span data-i18n="hud.best"></span><b id="hud-best">--</b></div>
+    </div>
+    <canvas id="mirror" data-i18n-attr="aria-label:set.mirror"></canvas>
+    <ol id="standings"></ol>
+    <canvas id="minimap" data-i18n-attr="aria-label:set.minimap"></canvas>
+    <div id="speedo-wrap">
+      <canvas id="speedo" data-i18n-attr="aria-label:set.speedo"></canvas>
+      <div id="speedo-digital"><b id="spd-val">0</b><span id="spd-unit">km/h</span><span id="spd-gear">1</span></div>
+    </div>
+    <div id="hud-msg"></div>
+    <div id="hud-wrong" class="hidden" data-i18n="hud.wrong"></div>
+    <div id="hud-fps" class="hidden"></div>
+    <button id="btn-pause" class="hud-btn" data-i18n-attr="aria-label:hud.pause;title:hud.pause">&#10074;&#10074;</button>
+    <div id="touch" class="hidden">
+      <div class="t-left">
+        <button data-t="left" data-i18n-attr="aria-label:touch.left">&#9664;</button>
+        <button data-t="right" data-i18n-attr="aria-label:touch.right">&#9654;</button>
+      </div>
+      <div class="t-right">
+        <button data-t="brake" class="t-brake" data-i18n="touch.brake"></button>
+        <button data-t="gas" class="t-gas" data-i18n="touch.gas"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ana menü -->
+  <section id="scr-main" class="screen">
+    <div class="panel main-panel">
+      <h1 class="logo">WEB CAR<span>RACING GAME</span></h1>
+      <p class="subtitle" data-i18n="app.subtitle"></p>
+      <nav class="menu-buttons">
+        <button class="btn primary" data-go="new" data-i18n="menu.new"></button>
+        <button class="btn" data-go="settings" data-i18n="menu.settings"></button>
+        <button class="btn" data-go="about" data-i18n="menu.about"></button>
+      </nav>
+      <div class="lang-row">
+        <label for="main-lang" data-i18n="menu.language"></label>
+        <select id="main-lang" class="lang-select"></select>
+      </div>
+      <p class="hint" data-i18n="menu.hint"></p>
+      <p class="copy-line">&copy; 2026 Ercan Ersoy</p>
+    </div>
+  </section>
+
+  <!-- Yeni oyun -->
+  <section id="scr-new" class="screen hidden">
+    <div class="panel wide">
+      <header class="panel-head">
+        <button class="btn small ghost" data-go="main" data-i18n="common.back"></button>
+        <h2 data-i18n="new.title"></h2>
+        <span></span>
+      </header>
+      <div class="scroll">
+        <div class="opt-grid">
+          <div class="opt">
+            <label data-i18n="new.mode"></label>
+            <div class="seg" id="opt-mode">
+              <button data-v="laps" data-i18n="mode.laps"></button>
+              <button data-v="sprint" data-i18n="mode.sprint"></button>
+            </div>
+            <small id="mode-desc"></small>
+          </div>
+          <div class="opt" id="opt-laps-wrap">
+            <label for="opt-laps"><span data-i18n="new.laps"></span> <b id="opt-laps-val">3</b></label>
+            <input type="range" id="opt-laps" min="1" max="10" step="1" value="3">
+          </div>
+          <div class="opt">
+            <label for="opt-cars"><span data-i18n="new.cars"></span> <b id="opt-cars-val">6</b></label>
+            <input type="range" id="opt-cars" min="1" max="8" step="1" value="6">
+          </div>
+          <div class="opt">
+            <label data-i18n="new.difficulty"></label>
+            <div class="seg" id="opt-diff">
+              <button data-v="kolay" data-i18n="diff.kolay"></button>
+              <button data-v="orta" data-i18n="diff.orta"></button>
+              <button data-v="zor" data-i18n="diff.zor"></button>
+            </div>
+          </div>
+        </div>
+
+        <h3 data-i18n="new.car"></h3>
+        <div id="car-list" class="car-list"></div>
+
+        <h3 data-i18n="new.color"></h3>
+        <div id="color-list" class="color-list"></div>
+
+        <h3><span data-i18n="new.map"></span> <small id="map-sel-name"></small></h3>
+        <div id="map-list" class="map-list"></div>
+      </div>
+      <footer class="panel-foot">
+        <div id="sel-summary" class="summary"></div>
+        <button class="btn primary" id="btn-start" data-i18n="new.start"></button>
+      </footer>
+    </div>
+  </section>
+
+  <!-- Ayarlar -->
+  <section id="scr-settings" class="screen hidden">
+    <div class="panel">
+      <header class="panel-head">
+        <button class="btn small ghost" id="settings-back" data-i18n="common.back"></button>
+        <h2 data-i18n="set.title"></h2>
+        <span></span>
+      </header>
+      <div class="scroll">
+        <form id="settings-form" class="settings" onsubmit="return false">
+          <h3 data-i18n="set.player"></h3>
+          <div class="set-row"><label for="s-playerName" data-i18n="set.playerName"></label><input type="text" id="s-playerName" maxlength="14" data-i18n-attr="placeholder:player.you"></div>
+          <div class="set-row"><label for="s-lang" data-i18n="set.language"></label><select id="s-lang" class="lang-select"></select></div>
+
+          <h3 data-i18n="set.sound"></h3>
+          <div class="set-row"><label for="s-music" data-i18n="set.music"></label><input type="checkbox" id="s-music"></div>
+          <div class="set-row"><label for="s-musicVolume" data-i18n="set.musicVolume"></label><input type="range" id="s-musicVolume" min="0" max="1" step="0.05"></div>
+          <div class="set-row"><label for="s-sfx" data-i18n="set.sfx"></label><input type="checkbox" id="s-sfx"></div>
+          <div class="set-row"><label for="s-sfxVolume" data-i18n="set.sfxVolume"></label><input type="range" id="s-sfxVolume" min="0" max="1" step="0.05"></div>
+          <div class="set-row"><label for="s-engineSound" data-i18n="set.engineSound"></label><input type="checkbox" id="s-engineSound"></div>
+
+          <h3 data-i18n="set.display"></h3>
+          <div class="set-row"><label for="s-quality" data-i18n="set.quality"></label>
+            <select id="s-quality">
+              <option value="low" data-i18n="set.quality.low"></option>
+              <option value="medium" data-i18n="set.quality.medium"></option>
+              <option value="high" data-i18n="set.quality.high"></option>
+            </select></div>
+          <div class="set-row"><label for="s-fpsLimit" data-i18n="set.fpsLimit"></label>
+            <select id="s-fpsLimit">
+              <option value="30" data-i18n="set.fps.30"></option>
+              <option value="60" data-i18n="set.fps.60"></option>
+              <option value="0" data-i18n="set.fps.0"></option>
+            </select></div>
+          <div class="set-row"><label for="s-showFps" data-i18n="set.showFps"></label><input type="checkbox" id="s-showFps"></div>
+
+          <h3 data-i18n="set.screen"></h3>
+          <div class="set-row"><label for="s-camera" data-i18n="set.camera"></label>
+            <select id="s-camera">
+              <option value="rotate" data-i18n="set.camera.rotate"></option>
+              <option value="fixed" data-i18n="set.camera.fixed"></option>
+            </select></div>
+          <div class="set-row"><label for="s-units" data-i18n="set.units"></label>
+            <select id="s-units">
+              <option value="kmh" data-i18n="unit.kmh"></option>
+              <option value="mph" data-i18n="unit.mph"></option>
+            </select></div>
+          <div class="set-row"><label for="s-speedo" data-i18n="set.speedo"></label>
+            <select id="s-speedo">
+              <option value="analog" data-i18n="set.speedo.analog"></option>
+              <option value="digital" data-i18n="set.speedo.digital"></option>
+            </select></div>
+          <div class="set-row"><label for="s-mirror" data-i18n="set.mirror"></label><input type="checkbox" id="s-mirror"></div>
+          <div class="set-row"><label for="s-minimap" data-i18n="set.minimap"></label><input type="checkbox" id="s-minimap"></div>
+          <div class="set-row"><label for="s-standings" data-i18n="set.standings"></label><input type="checkbox" id="s-standings"></div>
+          <div class="set-row"><label for="s-touch" data-i18n="set.touch"></label>
+            <select id="s-touch">
+              <option value="auto" data-i18n="set.touch.auto"></option>
+              <option value="on" data-i18n="set.touch.on"></option>
+              <option value="off" data-i18n="set.touch.off"></option>
+            </select></div>
+
+          <h3 data-i18n="set.controls"></h3>
+          <table class="keys">
+            <tr><td data-i18n="key.throttle"></td><td><kbd>&uarr;</kbd> / <kbd>W</kbd></td></tr>
+            <tr><td data-i18n="key.brake"></td><td><kbd>&darr;</kbd> / <kbd>S</kbd></td></tr>
+            <tr><td data-i18n="key.steer"></td><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd> / <kbd>A</kbd> <kbd>D</kbd></td></tr>
+            <tr><td data-i18n="key.hand"></td><td><kbd data-i18n="key.space"></kbd></td></tr>
+            <tr><td data-i18n="key.reset"></td><td><kbd>R</kbd></td></tr>
+            <tr><td data-i18n="key.camera"></td><td><kbd>C</kbd></td></tr>
+            <tr><td data-i18n="key.music"></td><td><kbd>M</kbd></td></tr>
+            <tr><td data-i18n="key.pause"></td><td><kbd>Esc</kbd> / <kbd>P</kbd></td></tr>
+          </table>
+          <p class="note" data-i18n="set.gamepad"></p>
+
+          <div class="set-actions">
+            <button type="button" class="btn small" id="btn-reset-records" data-i18n="set.resetRecords"></button>
+            <button type="button" class="btn small" id="btn-reset-settings" data-i18n="set.resetSettings"></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hakkında -->
+  <section id="scr-about" class="screen hidden">
+    <div class="panel">
+      <header class="panel-head">
+        <button class="btn small ghost" data-go="main" data-i18n="common.back"></button>
+        <h2 data-i18n="about.title"></h2>
+        <span></span>
+      </header>
+      <div class="scroll about">
+        <h1 class="logo small">WEB CAR<span>RACING GAME</span></h1>
+        <p data-i18n-html="about.p1"></p>
+        <h3 data-i18n="about.features"></h3>
+        <ul data-i18n-html="about.list"></ul>
+        <h3 data-i18n="about.tech"></h3>
+        <p data-i18n="about.techText"></p>
+        <h3 data-i18n="about.copyTitle"></h3>
+        <p class="copyright" data-i18n-html="about.copy"></p>
+        <p class="version" id="about-version"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Duraklatma -->
+  <section id="scr-pause" class="screen hidden dim">
+    <div class="panel narrow">
+      <h2 data-i18n="pause.title"></h2>
+      <nav class="menu-buttons">
+        <button class="btn primary" id="btn-resume" data-i18n="pause.resume"></button>
+        <button class="btn" id="btn-restart" data-i18n="pause.restart"></button>
+        <button class="btn" id="btn-pause-settings" data-i18n="menu.settings"></button>
+        <button class="btn" id="btn-quit" data-i18n="pause.quit"></button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Sonuçlar -->
+  <section id="scr-results" class="screen hidden dim">
+    <div class="panel wide">
+      <header class="panel-head center">
+        <h2 data-i18n="res.title"></h2>
+      </header>
+      <div class="scroll">
+        <p id="res-info" class="res-info"></p>
+        <div class="table-wrap">
+          <table class="results">
+            <thead><tr>
+              <th data-i18n="res.pos"></th><th data-i18n="res.driver"></th><th data-i18n="res.car"></th>
+              <th data-i18n="res.time"></th><th data-i18n="res.gap"></th><th data-i18n="res.bestLap"></th><th data-i18n="res.points"></th>
+            </tr></thead>
+            <tbody id="res-body"></tbody>
+          </table>
+        </div>
+        <div id="res-records" class="res-records"></div>
+      </div>
+      <footer class="panel-foot">
+        <button class="btn" id="btn-res-menu" data-i18n="res.menu"></button>
+        <button class="btn primary" id="btn-res-again" data-i18n="res.again"></button>
+      </footer>
+    </div>
+  </section>
+
+  <script src="js/util.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/cars.js"></script>
+  <script src="js/tracks.js"></script>
+  <script src="js/race.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
