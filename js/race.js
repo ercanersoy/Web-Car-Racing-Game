@@ -1,10 +1,10 @@
-/* Web Car Racing Game - yarış mantığı, fizik ve yapay zekâ */
+/* Web Car Racing Game - race logic, physics and AI */
 'use strict';
 
 const DIFFICULTIES = {
-  kolay: { skill: 0.84, corner: 0.86, band: 0.02 },
-  orta: { skill: 0.93, corner: 0.95, band: 0.04 },
-  zor: { skill: 1.0, corner: 1.04, band: 0.05 }
+  easy: { skill: 0.84, corner: 0.86, band: 0.02 },
+  medium: { skill: 0.93, corner: 0.95, band: 0.04 },
+  hard: { skill: 1.0, corner: 1.04, band: 0.05 }
 };
 const POINTS = [10, 8, 6, 5, 4, 3, 2, 1];
 
@@ -19,9 +19,9 @@ class Race {
     this.mode = opts.mode === 'sprint' ? 'sprint' : 'laps';
     this.track = Tracks.get(this.mode === 'sprint' ? 'sprint' : 'circuit', opts.trackIndex);
     this.laps = this.mode === 'sprint' ? 1 : opts.laps;
-    // hedef ilerleme: turda laps × örnek sayısı, sprintte bitiş çizgisinin indeksi
+    // target progress: laps × sample count for lap races, the finish-line index for sprints
     this.target = this.mode === 'sprint' ? this.track.finishIdx : this.laps * this.track.n;
-    this.diff = DIFFICULTIES[opts.difficulty] || DIFFICULTIES.orta;
+    this.diff = DIFFICULTIES[opts.difficulty] || DIFFICULTIES.medium;
     this.state = 'countdown';   // countdown | racing | finishing | done
     this.countdown = 3.5;
     this.lastCount = 4;
@@ -32,7 +32,7 @@ class Race {
     this.safeTables = {};
     this.rng = U.rng((Date.now() & 0xffff) + opts.trackIndex * 977);
 
-    // efektler (0: yok, 1: fren izi, 2: fren izi + parçacık)
+    // effects (0: none, 1: skid marks, 2: skid marks + particles)
     this.skids = new Float32Array(3000 * 4);
     this.particles = [];
     this.setEffects(opts.effects == null ? 1 : opts.effects);
@@ -40,7 +40,7 @@ class Race {
     this.createCars();
   }
 
-  /* Grafik kalitesi yarış sırasında değişirse efektleri güncelle */
+  /* Update effects if the graphics quality changes during a race */
   setEffects(level) {
     if (this.effects === level) return;
     this.effects = level;
@@ -49,7 +49,7 @@ class Race {
     if (level < 2) this.particles.length = 0;
   }
 
-  /* Görünen ad: dil değişince de doğru gösterilsin diye her seferinde hesaplanır */
+  /* Display name: computed each time so it stays correct after a language change */
   static nameOf(car) {
     if (car.isPlayer) return car.playerName || I18N.t('player.you');
     return I18N.t('player.ai', { n: car.num });
@@ -59,11 +59,11 @@ class Race {
     const o = this.opts, t = this.track, n = t.n;
     const count = U.clamp(o.carCount | 0, 1, 8);
     const colors = CAR_COLORS.map((c, i) => i).filter(i => i !== o.colorIdx);
-    // karıştır
+    // shuffle
     for (let i = colors.length - 1; i > 0; i--) { const j = Math.floor(this.rng() * (i + 1)); [colors[i], colors[j]] = [colors[j], colors[i]]; }
 
     for (let k = 0; k < count; k++) {
-      const isPlayer = k === count - 1;   // oyuncu en arkadan başlar
+      const isPlayer = k === count - 1;   // the player starts at the back
       const modelIdx = isPlayer ? o.modelIdx : Math.floor(this.rng() * CAR_MODELS.length);
       const colorIdx = isPlayer ? o.colorIdx : colors[k % colors.length];
       const row = Math.floor(k / 2), col = k % 2;
@@ -92,10 +92,10 @@ class Race {
       this.cars.push(car);
     }
     this.player = this.cars[this.cars.length - 1];
-    this.rank();   // canlı sıralama geri sayım sırasında da görünsün
+    this.rank();   // live standings are visible during the countdown too
   }
 
-  /* --- yapay zekâ için viraj güvenli hız tablosu --- */
+  /* --- safe cornering speed table for the AI --- */
   static omega(m, v) {
     const a = Math.abs(v);
     return m.turn * Math.min(1, a / 120) * (1 - 0.4 * Math.min(1, a / m.maxSpeed));
@@ -120,13 +120,13 @@ class Race {
     return tab;
   }
 
-  /* --- ana güncelleme --- */
+  /* --- main update --- */
   update(dt, input) {
     if (this.state === 'done') return;
     if (this.state === 'countdown') {
       this.countdown -= dt;
       const c = Math.ceil(this.countdown);
-      // yalnızca 3-2-1; "BAŞLA" aşağıda bir kez bildirilir
+      // only 3-2-1; "GO" is reported once below
       if (c >= 1 && c !== this.lastCount && c <= 3) {
         this.lastCount = c;
         if (this.hooks.onCountdown) this.hooks.onCountdown(c);
@@ -135,7 +135,7 @@ class Race {
         this.state = 'racing';
         if (this.hooks.onCountdown) this.hooks.onCountdown(0);
       }
-      // motor sesi için gaz (araçlar hareket etmez)
+      // throttle for engine sound only (cars do not move)
       this.player.throttle = input ? input.throttle : 0;
       this.updateParticles(dt);
       return;
@@ -174,13 +174,13 @@ class Race {
     const ca = Math.cos(car.angle), sa = Math.sin(car.angle);
     const vf = car.vf;
 
-    // şerit seçimi
+    // lane choice
     ai.laneT -= dt;
     if (ai.laneT <= 0) {
       ai.laneTarget = (this.rng() - 0.5) * t.half * 1.0;
       ai.laneT = 2 + this.rng() * 3;
     }
-    // öndeki araçlardan kaçın
+    // avoid cars ahead
     let blocked = false;
     for (const o of this.cars) {
       if (o === car) continue;
@@ -205,7 +205,7 @@ class Race {
     car.steer = U.clamp(diff * 2.4, -1, 1);
     car.hand = false;
 
-    // hız kontrolü
+    // speed control
     const safe = this.safeTable(car.modelIdx);
     const dec = m.brake * 0.7;
     const corner = this.diff.corner * (car.finished ? 0.9 : 1);
@@ -217,7 +217,7 @@ class Race {
       if (allowed < target) target = allowed;
     }
     if (car.offroad) target = Math.min(target, m.maxSpeed * m.offroad);
-    // açık yolda bitişten sonra yavaşla ve dur
+    // on an open road, slow down and stop after the finish
     if (car.finished && !t.closed) target = 0;
 
     if (ai.reverseT > 0) {
@@ -232,7 +232,7 @@ class Race {
       car.throttle = 1; car.brake = 0;
     }
 
-    // sıkışma algılama
+    // stuck detection
     if (vf < 20 && !car.finished && (this.state === 'racing' || this.state === 'finishing')) {
       ai.stuckT += dt;
       if (ai.stuckT > 1.5 && ai.stuckT < 1.6) ai.reverseT = 1.0;
@@ -252,7 +252,7 @@ class Race {
     const gripTheme = t.theme.grip;
     let maxS = m.maxSpeed * car.speedMul * (car.offroad ? m.offroad : 1);
 
-    // dönüş
+    // steering
     let ca = Math.cos(car.angle), sa = Math.sin(car.angle);
     let vf = car.vx * ca + car.vy * sa;
     const steerAmt = car.steer * Race.omega(m, vf) * Math.sign(vf) * (car.hand ? 1.35 : 1);
@@ -260,12 +260,12 @@ class Race {
     car.angle += steerAmt * dt;
     if (car.angle > Math.PI) car.angle -= U.TAU; else if (car.angle < -Math.PI) car.angle += U.TAU;
 
-    // yeni yönde hız bileşenleri
+    // velocity components in the new heading
     ca = Math.cos(car.angle); sa = Math.sin(car.angle);
     vf = car.vx * ca + car.vy * sa;
     let vr = -car.vx * sa + car.vy * ca;
 
-    // motor / fren
+    // engine / brakes
     if (car.throttle > 0 && vf < maxS) {
       vf += m.accel * car.throttle * (1 - 0.7 * Math.max(0, vf) / maxS) * dt;
     }
@@ -273,13 +273,13 @@ class Race {
       if (vf > 5) vf -= m.brake * car.brake * dt;
       else vf = Math.max(vf - m.accel * 0.55 * car.brake * dt, -m.maxSpeed * 0.28);
     }
-    if (car.throttle === 0 && car.brake === 0) vf -= vf * 0.45 * dt;      // motor freni
+    if (car.throttle === 0 && car.brake === 0) vf -= vf * 0.45 * dt;      // engine braking
     if (car.hand) vf -= vf * 1.1 * dt;
-    if (car.offroad) vf -= vf * (1.4 * (1 - m.offroad) + 0.2) * dt;       // çim sürtünmesi
+    if (car.offroad) vf -= vf * (1.4 * (1 - m.offroad) + 0.2) * dt;       // grass drag
     if (vf > maxS) vf -= (vf - maxS) * 2.5 * dt;
     if (Math.abs(vf) < 1 && car.throttle === 0 && car.brake === 0) vf = 0;
 
-    // yanal tutuş (kayma)
+    // lateral grip (sliding)
     const g = m.grip * gripTheme * (car.hand ? 0.22 : 1) * (car.offroad ? 0.75 : 1);
     vr *= Math.exp(-g * dt);
 
@@ -291,7 +291,7 @@ class Race {
 
     this.trackProgress(car, dt);
 
-    // vites / devir (gösterge ve ses için)
+    // gear / rpm (for the HUD and sound)
     const r = U.clamp(Math.abs(vf) / m.maxSpeed, 0, 1.1);
     const shifts = [0, 0.14, 0.3, 0.48, 0.66, 0.84, 1.2];
     let gear = 1;
@@ -300,7 +300,7 @@ class Race {
     const lo = shifts[gear - 1], hi = shifts[gear];
     car.rpm = vf < -5 ? 0.4 : U.clamp(0.25 + 0.75 * (r - lo) / (hi - lo), 0, 1);
 
-    // kayma ve fren izi
+    // sliding and skid marks
     const skidding = Math.abs(vr) > 85 || (car.hand && Math.abs(vf) > 90) || (car.brake > 0 && vf > 220);
     car.skid = skidding ? U.clamp(Math.max(Math.abs(vr) / 250, car.hand ? 0.6 : 0.4), 0, 1) : 0;
     if (this.maxSkids) this.marks(car, skidding);
@@ -331,7 +331,7 @@ class Race {
     let dx = car.x - t.xs[best], dy = car.y - t.ys[best];
     const h = t.heading[best], ch = Math.cos(h), sh = Math.sin(h);
     let along = dx * ch + dy * sh;
-    // açık yolun iki ucunda kapanış bariyeri
+    // end barriers at both ends of an open road
     if (!t.closed && ((best === 0 && along < 0) || (best === n - 1 && along > 0))) {
       car.x -= ch * along; car.y -= sh * along;
       const va = car.vx * ch + car.vy * sh;
@@ -346,7 +346,7 @@ class Race {
     car.progress = (t.closed ? car.lap * n : 0) + best + along / t.spacing;
     car.offroad = Math.abs(car.lat) > t.half + 4;
 
-    // bariyer
+    // side barriers
     const lim = t.barrier - car.model.wid * 0.6;
     if (Math.abs(car.lat) > lim) {
       const s = Math.sign(car.lat);
@@ -363,11 +363,11 @@ class Race {
       car.lat = s * lim;
     }
 
-    // ters yön
+    // wrong way
     const facing = Math.cos(car.angle - h);
     if (facing < -0.3 && car.vf > 40) car.wrongT += dt; else car.wrongT = 0;
 
-    // tur / bitiş
+    // laps / finish
     if (!car.finished) {
       if (car.lap > car.lapsDone && car.lap >= 1) {
         car.lapsDone = car.lap;
@@ -378,7 +378,7 @@ class Race {
         if (car.bestLap == null || lt < car.bestLap) car.bestLap = lt;
         if (this.hooks.onLap) this.hooks.onLap(car);
       }
-      // tur yarışında bitiş, son turun sayıldığı anla aynıdır (tur süresi = bitiş süresi)
+      // in a lap race the finish is the moment the last lap is counted (lap time = finish time)
       const done = this.mode === 'sprint' ? car.progress >= this.target : car.lap >= this.laps;
       if (done) this.finishCar(car);
     }
@@ -389,7 +389,7 @@ class Race {
     car.finishTime = this.time;
     this.finishOrder.push(car);
     if (car.isPlayer) {
-      car.auto = true;            // bitişten sonra araç otomatik sürülür
+      car.auto = true;            // after the finish the car is driven automatically
       this.state = 'finishing';
       this.finishT = 4;
       if (this.hooks.onPlayerFinish) this.hooks.onPlayerFinish(car);
@@ -443,7 +443,7 @@ class Race {
     order.forEach((c, i) => { c.rank = i + 1; });
     this.order = order;
 
-    // hafif lastik bant etkisi (yapay zekâ oyuncudan çok kopmasın)
+    // mild rubber-banding (keeps the AI from drifting too far from the player)
     const p = this.player, band = this.diff.band, n = this.track.n;
     for (const c of this.cars) {
       if (c.isPlayer) continue;

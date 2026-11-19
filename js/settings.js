@@ -1,19 +1,19 @@
-/* Web Car Racing Game - ayarlar (localStorage'da saklanır) */
+/* Web Car Racing Game - settings (stored in localStorage) */
 'use strict';
 
 const Settings = (() => {
   const KEY = 'wcrg.settings.v1';
   const defaults = {
-    lang: '',               // '' = ilk açılışta tarayıcı dilinden belirlenir (tr | en-US | en-GB)
-    playerName: '',         // '' = dile göre varsayılan ad ("Sen" / "You")
-    uiTheme: 'auto',        // auto (sistem) | light | dark
+    lang: '',               // '' = chosen from the browser language on first run (tr | en-US | en-GB)
+    playerName: '',         // '' = language-dependent default name ("Sen" / "You")
+    uiTheme: 'auto',        // auto (system) | light | dark
     music: true,
     musicVolume: 0.5,
     sfx: true,
     sfxVolume: 0.7,
     engineSound: true,
     quality: 'medium',      // low | medium | high
-    fpsLimit: 60,           // 30 | 60 | 0 (sınırsız)
+    fpsLimit: 60,           // 30 | 60 | 0 (unlimited)
     camera: 'rotate',       // rotate | fixed
     units: 'kmh',           // kmh | mph
     mirror: true,
@@ -35,7 +35,7 @@ const Settings = (() => {
     U.save(KEY, data);
     listeners.forEach(fn => fn(k, v));
   }
-  /* Varsayılana dön; dil korunur */
+  /* Restore defaults; the language is kept */
   function reset() {
     data = Object.assign({}, defaults, { lang: data.lang });
     U.save(KEY, data);

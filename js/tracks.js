@@ -1,109 +1,109 @@
-/* Web Car Racing Game - harita (pist) tanımları ve üretimi
+/* Web Car Racing Game - map (track) definitions and generation
  *
- * İki tür harita vardır:
- *  - 'circuit': kapalı tur pisti (tur yarışı), başlangıç ve bitiş aynı çizgidedir.
- *  - 'sprint' : açık yol (kısa yarış), başlangıç ve bitiş noktaları ayrıdır.
+ * There are two kinds of maps:
+ *  - 'circuit': closed lap circuit (lap race); start and finish are on the same line.
+ *  - 'sprint' : open road (sprint); start and finish points are separate.
  */
 'use strict';
 
-/* Göz yormayan, doygunluğu düşük renkler (saf beyaz / saf siyah ve neon renk yok) */
+/* Easy-on-the-eyes, low-saturation colours (no pure white / pure black and no neon) */
 const THEMES = {
-  cayir: {
+  meadow: {
     ground: '#5f8150', patch: '#597a4b', road: '#62656b', line: '#d9d8cf',
     curbA: '#a65a50', curbB: '#d3cfc3', barrier: '#3d4239', barrier2: '#8e9186', grip: 1,
     scenery: [['tree', 5], ['bush', 3], ['rock', 1], ['flower', 2]]
   },
-  col: {
+  desert: {
     ground: '#c4ab78', patch: '#bba16e', road: '#776c60', line: '#e3d8bf',
     curbA: '#a5654f', curbB: '#ddd1b7', barrier: '#6b5539', barrier2: '#b39b76', grip: 0.94,
     scenery: [['cactus', 4], ['rock', 4], ['drybush', 3]]
   },
-  kar: {
+  snow: {
     ground: '#cdd6dd', patch: '#c3cdd5', road: '#646c76', line: '#e6eaee',
     curbA: '#617ea3', curbB: '#dde3e8', barrier: '#4a5563', barrier2: '#98a4b0', grip: 0.82,
     scenery: [['pine', 6], ['snowrock', 2], ['snowman', 0.3]]
   },
-  sonbahar: {
+  autumn: {
     ground: '#8d7a4f', patch: '#857249', road: '#5d5954', line: '#e1dbcf',
     curbA: '#a3663f', curbB: '#d8cfbd', barrier: '#4a3e31', barrier2: '#a58f6e', grip: 0.95,
-    scenery: [['tree_or', 4], ['tree_red', 3], ['bush', 2], ['hay', 1]]
+    scenery: [['tree_orange', 4], ['tree_red', 3], ['bush', 2], ['hay', 1]]
   },
-  gece: {
+  night: {
     ground: '#202a27', patch: '#24302c', road: '#3b3f46', line: '#a8955c',
     curbA: '#66597c', curbB: '#557a80', barrier: '#171b1e', barrier2: '#6f6648', grip: 1, night: true,
     scenery: [['building', 4], ['lamp', 4], ['tree_dark', 2]]
   }
 };
 
-/* Tur pistleri - ad (Türkçe; çeviriler i18n.js 'track.<i>'), tema, tohum, yarıçap,
-   kontrol noktası, değişkenlik, x esneme, y esneme, yol genişliği */
+/* Lap circuits - internal name (display names: i18n.js 'track.<i>'), theme, seed, radius,
+   control points, variance, x stretch, y stretch, road width */
 const TRACK_DEFS = [
-  ['Yeşil Vadi', 'cayir', 11, 1500, 6, 0.20, 1.35, 0.80, 160],
-  ['Çınar Pisti', 'cayir', 23, 1600, 8, 0.30, 1.10, 0.95, 150],
-  ['Bahar Halkası', 'cayir', 37, 1700, 9, 0.38, 1.00, 1.00, 150],
-  ['Kır Çiçeği', 'cayir', 41, 1800, 11, 0.45, 1.20, 0.90, 140],
-  ['Orman Yolu', 'cayir', 59, 1900, 13, 0.50, 1.00, 1.05, 135],
-  ['Serap', 'col', 61, 1600, 6, 0.22, 1.40, 0.75, 160],
-  ['Kum Fırtınası', 'col', 73, 1750, 8, 0.35, 1.15, 0.90, 150],
-  ['Vaha Turu', 'col', 89, 1800, 10, 0.40, 1.00, 1.00, 145],
-  ['Kaktüs Kanyonu', 'col', 97, 1900, 12, 0.48, 1.10, 0.95, 140],
-  ['Güneş Yolu', 'col', 101, 2100, 14, 0.52, 1.25, 0.85, 135],
-  ['Kartepe', 'kar', 113, 1550, 7, 0.25, 1.20, 0.90, 160],
-  ['Buz Kraliçesi', 'kar', 127, 1700, 9, 0.35, 1.00, 1.00, 150],
-  ['Çam Ormanı', 'kar', 131, 1850, 10, 0.42, 1.15, 0.90, 145],
-  ['Kuzey Rüzgârı', 'kar', 149, 2000, 12, 0.50, 1.30, 0.80, 140],
-  ['Beyaz Zirve', 'kar', 157, 2100, 15, 0.55, 1.00, 1.00, 135],
-  ['Hazan', 'sonbahar', 163, 1600, 7, 0.28, 1.30, 0.85, 155],
-  ['Kızıl Yaprak', 'sonbahar', 179, 1750, 9, 0.36, 1.05, 1.00, 150],
-  ['Bağ Bozumu', 'sonbahar', 181, 1850, 11, 0.44, 1.20, 0.90, 145],
-  ['Kestane Yolu', 'sonbahar', 193, 2000, 12, 0.50, 1.00, 1.10, 140],
-  ['Ekim Rallisi', 'sonbahar', 199, 2200, 16, 0.55, 1.15, 0.95, 135],
-  ['Ay Işığı', 'gece', 211, 1600, 6, 0.25, 1.40, 0.80, 160],
-  ['Neon Bulvarı', 'gece', 223, 1750, 8, 0.35, 1.20, 0.90, 150],
-  ['Liman Turu', 'gece', 227, 1900, 10, 0.42, 1.00, 1.00, 145],
-  ['Köprü Altı', 'gece', 239, 2000, 12, 0.50, 1.25, 0.85, 140],
-  ['Gece Yarısı', 'gece', 241, 2200, 15, 0.56, 1.05, 1.00, 135]
+  ['Green Valley', 'meadow', 11, 1500, 6, 0.20, 1.35, 0.80, 160],
+  ['Plane Tree Circuit', 'meadow', 23, 1600, 8, 0.30, 1.10, 0.95, 150],
+  ['Spring Ring', 'meadow', 37, 1700, 9, 0.38, 1.00, 1.00, 150],
+  ['Wildflower', 'meadow', 41, 1800, 11, 0.45, 1.20, 0.90, 140],
+  ['Forest Road', 'meadow', 59, 1900, 13, 0.50, 1.00, 1.05, 135],
+  ['Mirage', 'desert', 61, 1600, 6, 0.22, 1.40, 0.75, 160],
+  ['Sandstorm', 'desert', 73, 1750, 8, 0.35, 1.15, 0.90, 150],
+  ['Oasis Loop', 'desert', 89, 1800, 10, 0.40, 1.00, 1.00, 145],
+  ['Cactus Canyon', 'desert', 97, 1900, 12, 0.48, 1.10, 0.95, 140],
+  ['Sun Road', 'desert', 101, 2100, 14, 0.52, 1.25, 0.85, 135],
+  ['Kartepe', 'snow', 113, 1550, 7, 0.25, 1.20, 0.90, 160],
+  ['Ice Queen', 'snow', 127, 1700, 9, 0.35, 1.00, 1.00, 150],
+  ['Pine Forest', 'snow', 131, 1850, 10, 0.42, 1.15, 0.90, 145],
+  ['North Wind', 'snow', 149, 2000, 12, 0.50, 1.30, 0.80, 140],
+  ['White Summit', 'snow', 157, 2100, 15, 0.55, 1.00, 1.00, 135],
+  ['Falling Leaves', 'autumn', 163, 1600, 7, 0.28, 1.30, 0.85, 155],
+  ['Crimson Leaf', 'autumn', 179, 1750, 9, 0.36, 1.05, 1.00, 150],
+  ['Grape Harvest', 'autumn', 181, 1850, 11, 0.44, 1.20, 0.90, 145],
+  ['Chestnut Lane', 'autumn', 193, 2000, 12, 0.50, 1.00, 1.10, 140],
+  ['October Rally', 'autumn', 199, 2200, 16, 0.55, 1.15, 0.95, 135],
+  ['Moonlight', 'night', 211, 1600, 6, 0.25, 1.40, 0.80, 160],
+  ['Neon Boulevard', 'night', 223, 1750, 8, 0.35, 1.20, 0.90, 150],
+  ['Harbor Loop', 'night', 227, 1900, 10, 0.42, 1.00, 1.00, 145],
+  ['Under the Bridge', 'night', 239, 2000, 12, 0.50, 1.25, 0.85, 140],
+  ['Midnight', 'night', 241, 2200, 15, 0.56, 1.05, 1.00, 135]
 ];
 
-/* Kısa yarış yolları - ad (çeviriler i18n.js 'sprint.<i>'), tema, tohum, yol uzunluğu,
-   kesit uzunluğu, kesit başına azami dönüş (radyan), ana yönden azami sapma (π katı), yol genişliği */
+/* Sprint roads - internal name (display names: i18n.js 'sprint.<i>'), theme, seed, road length,
+   segment length, max turn per segment (radians), max deviation from the main direction (× π), road width */
 const SPRINT_DEFS = [
-  ['Köy Yolu', 'cayir', 301, 7600, 950, 0.45, 0.40, 160],
-  ['Değirmen Geçidi', 'cayir', 313, 8200, 850, 0.60, 0.50, 150],
-  ['Dere Kenarı', 'cayir', 327, 8800, 800, 0.75, 0.55, 150],
-  ['Yayla Yolu', 'cayir', 331, 9400, 750, 0.90, 0.62, 140],
-  ['Bayır Aşağı', 'cayir', 347, 10000, 700, 1.05, 0.70, 135],
-  ['Kervan Yolu', 'col', 353, 7800, 1000, 0.45, 0.40, 160],
-  ['Kızgın Kum', 'col', 367, 8400, 900, 0.60, 0.50, 150],
-  ['Kum Tepeleri', 'col', 373, 9000, 800, 0.78, 0.56, 145],
-  ['Kuru Vadi', 'col', 389, 9600, 750, 0.92, 0.63, 140],
-  ['Sıcak Rüzgâr', 'col', 397, 10200, 700, 1.05, 0.70, 135],
-  ['Buzul Geçidi', 'kar', 401, 7600, 950, 0.45, 0.40, 160],
-  ['Kızak Yolu', 'kar', 419, 8200, 850, 0.62, 0.50, 150],
-  ['Tipi', 'kar', 421, 8800, 800, 0.76, 0.56, 145],
-  ['Kar Vadisi', 'kar', 433, 9400, 750, 0.90, 0.62, 140],
-  ['Zirve Yolu', 'kar', 439, 10000, 700, 1.05, 0.70, 135],
-  ['Yaprak Dökümü', 'sonbahar', 443, 7800, 950, 0.45, 0.40, 160],
-  ['Bağ Yolu', 'sonbahar', 457, 8400, 850, 0.60, 0.50, 150],
-  ['Sis Vadisi', 'sonbahar', 461, 9000, 800, 0.78, 0.56, 145],
-  ['Elma Bahçesi', 'sonbahar', 479, 9600, 750, 0.92, 0.63, 140],
-  ['Rüzgârlı Tepe', 'sonbahar', 487, 10200, 700, 1.05, 0.70, 135],
-  ['Şehir Işıkları', 'gece', 491, 7600, 1000, 0.45, 0.40, 160],
-  ['Sahil Yolu', 'gece', 503, 8200, 900, 0.60, 0.50, 150],
-  ['Gece Ekspresi', 'gece', 509, 8800, 800, 0.76, 0.56, 145],
-  ['Yıldız Yolu', 'gece', 521, 9400, 750, 0.90, 0.62, 140],
-  ['Şafak Öncesi', 'gece', 523, 10000, 700, 1.05, 0.70, 135]
+  ['Village Road', 'meadow', 301, 7600, 950, 0.45, 0.40, 160],
+  ['Mill Pass', 'meadow', 313, 8200, 850, 0.60, 0.50, 150],
+  ['Creekside', 'meadow', 327, 8800, 800, 0.75, 0.55, 150],
+  ['Highland Road', 'meadow', 331, 9400, 750, 0.90, 0.62, 140],
+  ['Downhill Run', 'meadow', 347, 10000, 700, 1.05, 0.70, 135],
+  ['Caravan Route', 'desert', 353, 7800, 1000, 0.45, 0.40, 160],
+  ['Scorching Sands', 'desert', 367, 8400, 900, 0.60, 0.50, 150],
+  ['Dunes', 'desert', 373, 9000, 800, 0.78, 0.56, 145],
+  ['Dry Valley', 'desert', 389, 9600, 750, 0.92, 0.63, 140],
+  ['Hot Wind', 'desert', 397, 10200, 700, 1.05, 0.70, 135],
+  ['Glacier Pass', 'snow', 401, 7600, 950, 0.45, 0.40, 160],
+  ['Sled Run', 'snow', 419, 8200, 850, 0.62, 0.50, 150],
+  ['Blizzard', 'snow', 421, 8800, 800, 0.76, 0.56, 145],
+  ['Snow Valley', 'snow', 433, 9400, 750, 0.90, 0.62, 140],
+  ['Summit Road', 'snow', 439, 10000, 700, 1.05, 0.70, 135],
+  ['Leaf Fall', 'autumn', 443, 7800, 950, 0.45, 0.40, 160],
+  ['Vineyard Road', 'autumn', 457, 8400, 850, 0.60, 0.50, 150],
+  ['Misty Valley', 'autumn', 461, 9000, 800, 0.78, 0.56, 145],
+  ['Apple Orchard', 'autumn', 479, 9600, 750, 0.92, 0.63, 140],
+  ['Windy Hill', 'autumn', 487, 10200, 700, 1.05, 0.70, 135],
+  ['City Lights', 'night', 491, 7600, 1000, 0.45, 0.40, 160],
+  ['Coast Road', 'night', 503, 8200, 900, 0.60, 0.50, 150],
+  ['Night Express', 'night', 509, 8800, 800, 0.76, 0.56, 145],
+  ['Starlight Road', 'night', 521, 9400, 750, 0.90, 0.62, 140],
+  ['Before Dawn', 'night', 523, 10000, 700, 1.05, 0.70, 135]
 ];
 
 const Tracks = (() => {
-  const SP = 10;            // örnek noktaları arası mesafe
-  const MARGIN = 85;        // yol kenarı ile bariyer arası çim payı
-  const SPRINT_START = 45;  // açık yolda başlangıç çizgisi (örnek indeksi); gerisi başlangıç ızgarası
-  const SPRINT_RUNOFF = 80; // bitiş çizgisinden sonra yavaşlama alanı (örnek sayısı)
+  const SP = 10;            // distance between sample points
+  const MARGIN = 85;        // grass margin between the road edge and the barrier
+  const SPRINT_START = 45;  // start line on an open road (sample index); the grid is behind it
+  const SPRINT_RUNOFF = 80; // run-off area after the finish line (sample count)
   const cache = { circuit: {}, sprint: {} };
   const DEFS = { circuit: TRACK_DEFS, sprint: SPRINT_DEFS };
 
-  /* closed: kapalı eğri mi; açık eğride uçlar tekrarlanır */
+  /* closed: whether the curve is closed; on an open curve the end points are repeated */
   function catmullRom(ctrl, segs, closed) {
     const out = [], K = ctrl.length;
     const P = i => closed ? ctrl[(i + K) % K] : ctrl[Math.max(0, Math.min(K - 1, i))];
@@ -122,7 +122,7 @@ const Tracks = (() => {
     return out;
   }
 
-  /* Çizgiyi eşit aralıklı noktalara böl */
+  /* Resample the polyline into evenly spaced points */
   function resample(pts, step, closed) {
     const out = [{ x: pts[0].x, y: pts[0].y }];
     let carry = 0;
@@ -172,7 +172,7 @@ const Tracks = (() => {
     const n = pts.length;
     const k = curvatures(headings(pts, closed), closed);
     for (let i = 0; i < n; i++) if (Math.abs(k[i]) > 1 / 120) return false;
-    // birbirinden uzak pist parçaları yakınlaşmamalı (ızgara ile hızlı kontrol)
+    // distant parts of the track must not come close (fast grid-based check)
     const minSep = 2 * (width / 2 + MARGIN) + 40;
     const cell = minSep, grid = new Map();
     const key = (cx, cy) => cx * 73856093 ^ cy * 19349663;
@@ -199,7 +199,7 @@ const Tracks = (() => {
     return true;
   }
 
-  /* --- kapalı tur pisti --- */
+  /* --- closed lap circuit --- */
   function generateCircuit(def) {
     const [, , seed, R, K, vari, sx, sy, width] = def;
     for (let attempt = 0; attempt < 80; attempt++) {
@@ -225,7 +225,7 @@ const Tracks = (() => {
     return resample(pts, SP, true);
   }
 
-  /* Pistin en düz bölümünü başlangıç/bitiş çizgisi yap */
+  /* Use the straightest section of the circuit for the start/finish line */
   function rotateToStart(pts) {
     const n = pts.length, k = curvatures(headings(pts, true), true);
     let best = 0, bestV = Infinity;
@@ -237,14 +237,14 @@ const Tracks = (() => {
     return pts.slice(best).concat(pts.slice(0, best));
   }
 
-  /* --- açık sprint yolu: genel olarak bir yöne ilerleyen, kıvrımlı yol --- */
+  /* --- open sprint road: a winding road that generally heads in one direction --- */
   function generateSprint(def) {
     const [, , seed, L, segLen, maxTurn, spread, width] = def;
     for (let attempt = 0; attempt < 80; attempt++) {
       const r = U.rng(seed * 7919 + attempt * 104729);
       const mt = maxTurn * Math.max(0.4, 1 - attempt / 60);
       const lim = spread * Math.PI;
-      // başlangıç düzlüğü (ızgara için)
+      // starting straight (for the grid)
       const ctrl = [{ x: -450, y: 0 }, { x: 0, y: 0 }, { x: 550, y: 0 }];
       let x = 550, y = 0, h = 0, len = 1000;
       while (len < L - 1000) {
@@ -256,7 +256,7 @@ const Tracks = (() => {
         ctrl.push({ x, y });
         len += sl;
       }
-      // bitiş düzlüğü ve yavaşlama alanı
+      // finishing straight and run-off area
       for (let s = 0; s < 3; s++) { x += Math.cos(h) * 450; y += Math.sin(h) * 450; ctrl.push({ x, y }); }
       let pts = resample(catmullRom(ctrl, 24, false), SP, false);
       if (!validate(pts, width, false)) continue;
@@ -269,7 +269,7 @@ const Tracks = (() => {
     return pts;
   }
 
-  /* Sadece önizleme için gerekenler (hafif) */
+  /* Only what is needed for previews (lightweight) */
   function getBasic(kind, i) {
     if (cache[kind][i]) return cache[kind][i];
     const def = DEFS[kind][i];
@@ -290,7 +290,7 @@ const Tracks = (() => {
       kind, index: i, closed, seed: def[2], themeId: def[1], theme: THEMES[def[1]],
       width: def[closed ? 8 : 7], n, xs, ys, spacing: SP,
       startIdx, finishIdx,
-      // yarış mesafesi (sprintte başlangıçtan bitişe, turda bir tur)
+      // race distance (start to finish for sprints, one lap for circuits)
       length: closed ? n * SP : (finishIdx - startIdx) * SP,
       bounds: { minX, minY, maxX, maxY },
       difficulty: level < 0.3 ? 'easy' : (level < 0.45 ? 'medium' : 'hard'),   // i18n: 'level.<x>'
@@ -303,7 +303,7 @@ const Tracks = (() => {
     return t;
   }
 
-  /* Yarış için tüm verileri hazırla */
+  /* Prepare all data needed for a race */
   function get(kind, i) {
     const t = getBasic(kind, i);
     if (t.full) return t;
@@ -320,7 +320,7 @@ const Tracks = (() => {
     return t;
   }
 
-  /* Bariyer çizgisi: iç virajlarda kendini kesen noktaları ayıkla */
+  /* Barrier line: drop points that self-intersect on the inside of corners */
   function cleanOffset(t, off) {
     const out = [];
     const n = t.n, W = 40, lim = Math.abs(off) - 3;
@@ -331,13 +331,13 @@ const Tracks = (() => {
         const k = t.wrap(i + j);
         if (Math.hypot(t.xs[k] - x, t.ys[k] - y) < lim) { ok = false; break; }
       }
-      // açık yolun uçları her zaman korunur (kapanış bariyeri buraya bağlanır)
+      // the ends of an open road are always kept (the end barriers attach here)
       if (ok || (!t.closed && (i === 0 || i === n - 1))) out.push(x, y);
     }
     return out;
   }
 
-  /* En yakın pist noktası: { d: uzaklık, j: indeks } */
+  /* Nearest track point: { d: distance, j: index } */
   function nearestPoint(t, x, y, grid) {
     let best = Infinity, bj = -1;
     const cx = Math.floor(x / 200), cy = Math.floor(y / 200);
@@ -352,14 +352,14 @@ const Tracks = (() => {
     return { d: best, j: bj };
   }
 
-  /* Nesnelerin yukarıdan kapladığı alanın yarıçapı (sprite biriminde; dünyada × ölçek).
-     Bina kare olduğundan köşegenin yarısı alınır. */
+  /* Radius of the area an object covers when seen from above (sprite units; × scale in the world).
+     Buildings are square, so half of the diagonal is used. */
   const FOOTPRINT = {
-    tree: 30, tree_or: 30, tree_red: 28, tree_dark: 26, bush: 22, drybush: 16, flower: 13,
+    tree: 30, tree_orange: 30, tree_red: 28, tree_dark: 26, bush: 22, drybush: 16, flower: 13,
     rock: 21, snowrock: 21, cactus: 19, pine: 30, snowman: 16, hay: 18, building: 51, lamp: 6
   };
 
-  /* Açık yolun başlangıç ve bitiş uçlarının uzantısında, yol genişliği + pay kadar bir koridor */
+  /* A corridor (road width + margin) extending beyond the start and finish ends of an open road */
   function blocksRoadEnd(t, x, y, rad) {
     const ends = [[0, t.heading[0] + Math.PI], [t.n - 1, t.heading[t.n - 1]]];
     for (const [i, h] of ends) {
@@ -382,7 +382,7 @@ const Tracks = (() => {
     const list = t.theme.scenery;
     const total = list.reduce((s, e) => s + e[1], 0);
     const items = [];
-    // yerleştirilen nesneler için ızgara: çakışma denetimi hızlı olsun
+    // grid of placed objects for fast overlap checks
     const CELL = 140, placed = new Map();
     const cellKey = (cx, cy) => cx + ',' + cy;
     const overlaps = (x, y, rad) => {
@@ -404,22 +404,22 @@ const Tracks = (() => {
       const side = r() < 0.5 ? -1 : 1;
       const sc = type === 'building' ? 0.8 + r() * 0.45 : 0.75 + r() * 0.6;
       const rad = FOOTPRINT[type] * sc;
-      // sokak lambaları yol kenarına dizilir; diğerleri yoldan farklı uzaklıklara dağılır
+      // street lamps line the roadside; other objects are spread at various distances
       const dist = type === 'lamp'
         ? t.barrier + 28 + r() * 12
         : t.barrier + 20 + rad + Math.pow(r(), 1.6) * 520;
       const x = t.xs[i] + t.nx[i] * side * dist, y = t.ys[i] + t.ny[i] * side * dist;
-      // nesnenin kenarı bariyere ya da pistin başka bir bölümüne taşmamalı
+      // the object's edge must not reach the barrier or another part of the track
       const np = nearestPoint(t, x, y, grid);
       if (np.d < t.barrier + 18 + rad) continue;
       if (overlaps(x, y, rad)) continue;
-      // açık yolun uçlarının önü/arkası boş kalsın (yol bir nesnenin içine girmesin)
+      // keep the area beyond the ends of an open road clear (the road must not run into an object)
       if (!t.closed && blocksRoadEnd(t, x, y, rad)) continue;
-      // binalar en yakın yola paralel durur; yuvarlak nesnelerde açı yalnızca çeşitlilik içindir
+      // buildings are parallel to the nearest road; for round objects the angle only adds variety
       let rot = r() * U.TAU;
       if (type === 'building') {
         let j = np.j;
-        if (j < 0) {   // ızgara aralığının dışında kalan uzak bina: tüm pisti tara
+        if (j < 0) {   // distant building outside the grid range: scan the whole track
           let bd = Infinity;
           for (let q = 0; q < t.n; q++) {
             const d = (t.xs[q] - x) ** 2 + (t.ys[q] - y) ** 2;
@@ -434,7 +434,7 @@ const Tracks = (() => {
       if (!placed.has(k)) placed.set(k, []);
       placed.get(k).push(item);
     }
-    // zemin lekeleri
+    // ground patches
     const patches = [];
     for (let c = 0; c < count * 0.5; c++) {
       const i = Math.floor(r() * t.n);

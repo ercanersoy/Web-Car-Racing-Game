@@ -1,4 +1,4 @@
-/* Web Car Racing Game - yardımcı fonksiyonlar */
+/* Web Car Racing Game - helper functions */
 'use strict';
 
 const U = (() => {
@@ -12,7 +12,7 @@ const U = (() => {
     return a;
   }
 
-  /* Tohumlu (deterministik) rastgele sayı üreteci: mulberry32 */
+  /* Seeded (deterministic) random number generator: mulberry32 */
   function rng(seed) {
     let s = seed >>> 0;
     return function () {
@@ -39,10 +39,10 @@ const U = (() => {
     } catch (e) { return fallback; }
   }
   function save(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* depolama yok */ }
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ }
   }
 
-  /* Renk yardımcıları (#rrggbb) */
+  /* Colour helpers (#rrggbb) */
   function shade(hex, amt) {
     const n = parseInt(hex.slice(1), 16);
     let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;

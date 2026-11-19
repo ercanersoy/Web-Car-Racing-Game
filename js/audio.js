@@ -1,11 +1,11 @@
-/* Web Car Racing Game - Web Audio API ile yazılımsal müzik ve ses efektleri */
+/* Web Car Racing Game - software-generated music and sound effects (Web Audio API) */
 'use strict';
 
 const Sound = (() => {
   let ac = null, master, musicBus, sfxBus, noiseBuf;
   let engine = null, skid = null;
   let lastHit = 0;
-  let held = false;   // oyun duraklatıldı: ses bilerek askıya alındı
+  let held = false;   // game is paused: audio is intentionally suspended
 
   function ensure() {
     if (ac) { if (ac.state === 'suspended' && !held) ac.resume(); return ac; }
@@ -13,7 +13,7 @@ const Sound = (() => {
     if (!AC) return null;
     ac = new AC();
     master = ac.createGain(); master.connect(ac.destination);
-    // yumuşak sınırlayıcı
+    // gentle limiter
     const comp = ac.createDynamicsCompressor();
     comp.threshold.value = -12; comp.ratio.value = 4;
     comp.connect(master);
@@ -37,7 +37,7 @@ const Sound = (() => {
 
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
-  /* ---------- ses efektleri ---------- */
+  /* ---------- sound effects ---------- */
   function beep(freq, dur, type, vol) {
     if (held || !ensure()) return;
     const t = ac.currentTime;
@@ -108,7 +108,7 @@ const Sound = (() => {
     engine = null; skid = null;
   }
 
-  /* ---------- prosedürel müzik ---------- */
+  /* ---------- procedural music ---------- */
   const SCALES = {
     minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], major: [0, 2, 4, 5, 7, 9, 11],
     mixo: [0, 2, 4, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10]
@@ -153,7 +153,7 @@ const Sound = (() => {
     const leadA = motif(), leadB = motif();
     const leadWave = pick(['square', 'triangle', 'sawtooth']);
     const arp = r() < 0.6;
-    // bölümler (8'er ölçü): giriş, A, B, A, ara, B
+    // sections (8 bars each): intro, A, B, A, break, B
     const sections = menu ? ['pad', 'padlead', 'padlead2', 'pad'] : ['intro', 'A', 'B', 'A', 'break', 'B'];
     return { scale, root, bpm, prog, kick, hat16, bass, leadA, leadB, leadWave, arp, sections, menu };
   }
@@ -204,7 +204,7 @@ const Sound = (() => {
     const s = song, sd = 60 / s.bpm / 4;
     const bar = Math.floor(st / 16), i = st % 16;
     let secIdx = Math.floor(bar / 8);
-    // giriş bir kez çalar, sonra döngü
+    // the intro plays once, then the rest loops
     if (secIdx >= s.sections.length) secIdx = 1 + ((secIdx - 1) % (s.sections.length - 1));
     const sec = s.sections[secIdx];
     const chordDeg = s.prog[bar % 4];

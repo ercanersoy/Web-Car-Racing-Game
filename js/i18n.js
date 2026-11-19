@@ -1,4 +1,4 @@
-/* Web Car Racing Game - çoklu dil desteği (Türkçe, Amerikan İngilizcesi, İngiliz İngilizcesi) */
+/* Web Car Racing Game - localisation (Turkish, American English, British English) */
 'use strict';
 
 const I18N = (() => {
@@ -21,7 +21,7 @@ const I18N = (() => {
     'new.cars': 'Araba sayısı (siz dahil):',
     'new.timeTrial': '(zamana karşı)',
     'new.difficulty': 'Rakip zorluğu',
-    'diff.kolay': 'Kolay', 'diff.orta': 'Orta', 'diff.zor': 'Zor',
+    'diff.easy': 'Kolay', 'diff.medium': 'Orta', 'diff.hard': 'Zor',
     'new.car': 'Otomobil',
     'new.color': 'Renk',
     'new.map': 'Harita',
@@ -33,7 +33,7 @@ const I18N = (() => {
     'map.record': 'Rekor {t}',
     'map.bestLap': 'En iyi tur {t}',
 
-    'theme.cayir': 'Çayır', 'theme.col': 'Çöl', 'theme.kar': 'Kar', 'theme.sonbahar': 'Sonbahar', 'theme.gece': 'Gece',
+    'theme.meadow': 'Çayır', 'theme.desert': 'Çöl', 'theme.snow': 'Kar', 'theme.autumn': 'Sonbahar', 'theme.night': 'Gece',
     'level.easy': 'Kolay', 'level.medium': 'Orta', 'level.hard': 'Zor',
 
     'stat.speed': 'Azami hız', 'stat.accel': 'Hızlanma', 'stat.handling': 'Yol tutuş',
@@ -43,8 +43,8 @@ const I18N = (() => {
     'car.2.tag': 'Yol tutuş', 'car.2.desc': 'Keskin virajlarda rakipsiz yol tutuşu sunan roadster.',
     'car.3.tag': 'Dayanıklı', 'car.3.desc': 'Ağır ve sağlam arazi aracı; çarpışmalardan ve çimden az etkilenir.',
     'car.4.tag': 'Hızlanma', 'car.4.desc': 'Hafif ve çevik; kalkışta herkesi geride bırakır.',
-    'color.kirmizi': 'Kırmızı', 'color.mavi': 'Mavi', 'color.sari': 'Sarı', 'color.yesil': 'Yeşil',
-    'color.turuncu': 'Turuncu', 'color.mor': 'Mor', 'color.beyaz': 'Beyaz', 'color.siyah': 'Siyah',
+    'color.red': 'Kırmızı', 'color.blue': 'Mavi', 'color.yellow': 'Sarı', 'color.green': 'Yeşil',
+    'color.orange': 'Turuncu', 'color.purple': 'Mor', 'color.white': 'Beyaz', 'color.black': 'Siyah',
 
     'player.you': 'Sen',
     'player.ai': 'Oyuncu {n}',
@@ -125,7 +125,7 @@ const I18N = (() => {
     'hud.finalLap': 'SON TUR!',
     'hud.lapN': 'TUR {n}',
     'hud.bestLapTag': ' · EN İYİ TUR',
-    'hud.finishedPos': '{p} SIRADA BİTİRDİN!',   // {p} zaten "2." biçiminde gelir
+    'hud.finishedPos': '{p} SIRADA BİTİRDİN!',   // {p} already arrives as "2."
     'hud.finish': 'BİTİŞ!',
     'hud.camRotate': 'Kamera: dönen', 'hud.camFixed': 'Kamera: sabit',
     'hud.musicOn': 'Müzik açık', 'hud.musicOff': 'Müzik kapalı',
@@ -159,7 +159,7 @@ const I18N = (() => {
     'new.cars': 'Number of cars (including you):',
     'new.timeTrial': '(time trial)',
     'new.difficulty': 'Opponent difficulty',
-    'diff.kolay': 'Easy', 'diff.orta': 'Medium', 'diff.zor': 'Hard',
+    'diff.easy': 'Easy', 'diff.medium': 'Medium', 'diff.hard': 'Hard',
     'new.car': 'Car',
     'new.color': 'Color',
     'new.map': 'Map',
@@ -171,7 +171,7 @@ const I18N = (() => {
     'map.record': 'Record {t}',
     'map.bestLap': 'Best lap {t}',
 
-    'theme.cayir': 'Meadow', 'theme.col': 'Desert', 'theme.kar': 'Snow', 'theme.sonbahar': 'Fall', 'theme.gece': 'Night',
+    'theme.meadow': 'Meadow', 'theme.desert': 'Desert', 'theme.snow': 'Snow', 'theme.autumn': 'Fall', 'theme.night': 'Night',
     'level.easy': 'Easy', 'level.medium': 'Medium', 'level.hard': 'Hard',
 
     'stat.speed': 'Top speed', 'stat.accel': 'Acceleration', 'stat.handling': 'Handling',
@@ -181,8 +181,8 @@ const I18N = (() => {
     'car.2.tag': 'Handling', 'car.2.desc': 'A roadster with unbeatable grip in tight corners.',
     'car.3.tag': 'Durable', 'car.3.desc': 'Heavy, sturdy off-roader; big tires shrug off bumps and grass.',
     'car.4.tag': 'Acceleration', 'car.4.desc': 'Light and nimble; leaves everyone behind off the line.',
-    'color.kirmizi': 'Red', 'color.mavi': 'Blue', 'color.sari': 'Yellow', 'color.yesil': 'Green',
-    'color.turuncu': 'Orange', 'color.mor': 'Purple', 'color.beyaz': 'White', 'color.siyah': 'Black',
+    'color.red': 'Red', 'color.blue': 'Blue', 'color.yellow': 'Yellow', 'color.green': 'Green',
+    'color.orange': 'Orange', 'color.purple': 'Purple', 'color.white': 'White', 'color.black': 'Black',
 
     'player.you': 'You',
     'player.ai': 'Player {n}',
@@ -278,10 +278,10 @@ const I18N = (() => {
     'sprint.0': 'Village Road', 'sprint.1': 'Mill Pass', 'sprint.2': 'Creekside', 'sprint.3': 'Highland Road', 'sprint.4': 'Downhill Run', 'sprint.5': 'Caravan Route', 'sprint.6': 'Scorching Sands', 'sprint.7': 'Dunes', 'sprint.8': 'Dry Valley', 'sprint.9': 'Hot Wind', 'sprint.10': 'Glacier Pass', 'sprint.11': 'Sled Run', 'sprint.12': 'Blizzard', 'sprint.13': 'Snow Valley', 'sprint.14': 'Summit Road', 'sprint.15': 'Leaf Fall', 'sprint.16': 'Vineyard Road', 'sprint.17': 'Misty Valley', 'sprint.18': 'Apple Orchard', 'sprint.19': 'Windy Hill', 'sprint.20': 'City Lights', 'sprint.21': 'Coast Road', 'sprint.22': 'Night Express', 'sprint.23': 'Starlight Road', 'sprint.24': 'Before Dawn'
   };
 
-  /* İngiliz İngilizcesi: Amerikan İngilizcesinden yalnızca farklı olanlar */
+  /* British English: only the entries that differ from American English */
   const enGB = Object.assign({}, enUS, {
     'new.color': 'Colour',
-    'theme.sonbahar': 'Autumn',
+    'theme.autumn': 'Autumn',
     'car.3.desc': 'Heavy, sturdy off-roader; big tyres shrug off bumps and grass.',
     'set.speedo.analog': 'Analogue',
     'key.throttle': 'Accelerator',
@@ -325,17 +325,17 @@ const I18N = (() => {
     return s;
   }
 
-  /* Yüzde: Türkçede işaret başta yazılır */
+  /* Percent: Turkish puts the sign first */
   function pct(n) { return lang() === 'tr' ? '%' + n : n + '%'; }
 
-  /* Sıra numarası: Türkçe "3.", İngilizce "3rd" */
+  /* Ordinal number: Turkish "3.", English "3rd" */
   function ordinal(n) {
     if (lang() === 'tr') return n + '.';
     const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
-  /* Statik HTML'i çevir: data-i18n (metin), data-i18n-html (HTML), data-i18n-attr="attr:anahtar;..." */
+  /* Translate static HTML: data-i18n (text), data-i18n-html (HTML), data-i18n-attr="attr:key;..." */
   function apply(root) {
     root = root || document;
     root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
