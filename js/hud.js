@@ -64,6 +64,7 @@ const Hud = (() => {
     els.touch.classList.toggle('hidden', !(t === 'on' || (t === 'auto' && isTouch)));
     els.spdUnit.textContent = I18N.t(Settings.get('units') === 'mph' ? 'unit.mph' : 'unit.kmh');
     if (race) els.lapLbl.textContent = I18N.t(race.mode === 'sprint' ? 'hud.dist' : 'hud.lap');
+    els.hud.classList.toggle('sprint', !!race && race.mode === 'sprint');
     for (const k in cache) delete cache[k];   // dil/birim değişince metinler yeniden yazılsın
     dialKey = ''; miniBase = null;
   }
@@ -94,7 +95,7 @@ const Hud = (() => {
     for (let v = 0; v <= maxV; v += step / 2) {
       const a = a0 + (a1 - a0) * v / maxV, major = v % step === 0;
       const r1 = R - (major ? 12 : 7) * k, r2 = R - 3 * k;
-      x.strokeStyle = v > maxV * 0.8 ? '#e8452c' : '#cfd6df';
+      x.strokeStyle = v > maxV * 0.8 ? '#c4685a' : '#c5cbd2';
       x.lineWidth = (major ? 2 : 1) * k;
       x.beginPath(); x.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
       x.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); x.stroke();
@@ -120,12 +121,12 @@ const Hud = (() => {
     const v = Math.min(maxV, speedValue(car.vf));
     const a = Math.PI * 0.75 + Math.PI * 1.5 * v / maxV;
     // devir yayı
-    sctx.strokeStyle = 'rgba(242,195,24,0.85)'; sctx.lineWidth = 4 * k;
+    sctx.strokeStyle = 'rgba(214,180,90,0.75)'; sctx.lineWidth = 4 * k;
     sctx.beginPath(); sctx.arc(cx, cy, W / 2 - 18 * k, Math.PI * 0.75, Math.PI * 0.75 + Math.PI * 1.5 * car.rpm * 0.999); sctx.stroke();
-    sctx.strokeStyle = '#e8452c'; sctx.lineWidth = 3 * k; sctx.lineCap = 'round';
+    sctx.strokeStyle = '#d0705f'; sctx.lineWidth = 3 * k; sctx.lineCap = 'round';
     sctx.beginPath(); sctx.moveTo(cx - Math.cos(a) * 10 * k, cy - Math.sin(a) * 10 * k);
     sctx.lineTo(cx + Math.cos(a) * (W / 2 - 16 * k), cy + Math.sin(a) * (W / 2 - 16 * k)); sctx.stroke();
-    sctx.fillStyle = '#e9edf2'; sctx.beginPath(); sctx.arc(cx, cy, 5 * k, 0, U.TAU); sctx.fill();
+    sctx.fillStyle = '#d9dde2'; sctx.beginPath(); sctx.arc(cx, cy, 5 * k, 0, U.TAU); sctx.fill();
   }
 
   function drawMinimap() {
@@ -138,7 +139,7 @@ const Hud = (() => {
     for (const c of race.cars) {
       const x = c.x * miniBase.s + miniBase.ox, y = c.y * miniBase.s + miniBase.oy;
       miniCtx.fillStyle = c.color;
-      miniCtx.strokeStyle = c.isPlayer ? '#fff' : '#000';
+      miniCtx.strokeStyle = c.isPlayer ? '#e4e5e0' : '#22262b';
       miniCtx.lineWidth = (c.isPlayer ? 2 : 1) * k;
       miniCtx.beginPath(); miniCtx.arc(x, y, (c.isPlayer ? 5 : 3.5) * k, 0, U.TAU);
       miniCtx.fill(); miniCtx.stroke();
@@ -178,7 +179,8 @@ const Hud = (() => {
       set(els.gear, 'gear', String(p.gear));
       set(els.pos, 'pos', p.rank + '/' + race.cars.length);
       if (race.mode === 'sprint') {
-        const pct = U.clamp(Math.floor(Math.max(0, p.progress) / race.target * 100), 0, 100);
+        const st = race.track.startIdx;
+        const pct = U.clamp(Math.floor((p.progress - st) / (race.target - st) * 100), 0, 100);
         set(els.lap, 'lap', I18N.pct(pct));
       } else {
         set(els.lap, 'lap', U.clamp(p.lap + 1, 1, race.laps) + '/' + race.laps);

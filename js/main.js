@@ -143,7 +143,7 @@ const Game = (() => {
     Sound.ensure();
     Sound.resume();
     Sound.engineStart();
-    Sound.playMusic(TRACK_DEFS[opts.trackIndex][2] * 13 + 5, 'race');
+    Sound.playMusic(race.track.seed * 13 + 5, 'race');
     lastT = performance.now(); lastRender = 0;
     rafId = requestAnimationFrame(frame);
   }
@@ -171,7 +171,7 @@ const Game = (() => {
     Sound.resume();
     Hud.stop();
     race = null;
-    ctx.fillStyle = '#14171c'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1b1f24'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     Sound.playMusic(7, 'menu'); menuMusicOn = true;
     UI.show('main');
   }
@@ -186,7 +186,7 @@ const Game = (() => {
     cam.zoom += (zt - cam.zoom) * Math.min(1, dt * 2);
     if (Settings.get('camera') === 'rotate') {
       const target = -Math.PI / 2 - p.angle;
-      cam.rot += U.wrapAngle(target - cam.rot) * Math.min(1, dt * 7);
+      cam.rot += U.wrapAngle(target - cam.rot) * Math.min(1, dt * 5);   // yumuşak dönüş: baş dönmesini azaltır
       const h = -Math.PI / 2 - cam.rot;
       const ahead = canvas.height * 0.2 / cam.zoom;
       cam.x = p.x + Math.cos(h) * ahead;

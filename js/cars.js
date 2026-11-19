@@ -31,14 +31,14 @@ const CAR_MODELS = [
 
 /* Renk adları i18n.js içinde: 'color.<id>' */
 const CAR_COLORS = [
-  { id: 'kirmizi', hex: '#d7263d' },
-  { id: 'mavi', hex: '#1f6fd1' },
-  { id: 'sari', hex: '#f2c318' },
-  { id: 'yesil', hex: '#28a05a' },
-  { id: 'turuncu', hex: '#f07a1a' },
-  { id: 'mor', hex: '#7d45c8' },
-  { id: 'beyaz', hex: '#e9ecef' },
-  { id: 'siyah', hex: '#2a2d33' }
+  { id: 'kirmizi', hex: '#c4474f' },
+  { id: 'mavi', hex: '#3f74b8' },
+  { id: 'sari', hex: '#d8b442' },
+  { id: 'yesil', hex: '#4f9a68' },
+  { id: 'turuncu', hex: '#d47f3c' },
+  { id: 'mor', hex: '#7f5aa8' },
+  { id: 'beyaz', hex: '#d9dcdf' },
+  { id: 'siyah', hex: '#3a3e44' }
 ];
 
 const Cars = (() => {
@@ -59,9 +59,7 @@ const Cars = (() => {
     const L = m.len, W = m.wid, hl = L / 2, hw = W / 2;
     const dark = U.shade(hex, -0.35), light = U.shade(hex, 0.35);
 
-    // gölge
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    U.roundRect(ctx, -hl + 2, -hw + 3, L, W, 6); ctx.fill();
+    // Not: gölge burada çizilmez; Render, dünyaya göre sabit ışık yönüyle ayrıca çizer.
 
     // tekerlekler
     ctx.fillStyle = '#111';
@@ -129,7 +127,7 @@ const Cars = (() => {
     }
 
     // farlar ve stoplar
-    ctx.fillStyle = '#fff6c8';
+    ctx.fillStyle = '#ece6c4';
     ctx.fillRect(hl - 3, -hw + 2, 3, 4); ctx.fillRect(hl - 3, hw - 6, 3, 4);
     ctx.fillStyle = '#8a0f14';
     ctx.fillRect(-hl, -hw + 2, 2, 4); ctx.fillRect(-hl, hw - 6, 2, 4);

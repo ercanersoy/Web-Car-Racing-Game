@@ -16,10 +16,11 @@ class Race {
   constructor(opts, hooks) {
     this.opts = opts;
     this.hooks = hooks || {};
-    this.track = Tracks.get(opts.trackIndex);
-    this.mode = opts.mode;
-    this.laps = opts.mode === 'sprint' ? 1 : opts.laps;
-    this.target = opts.mode === 'sprint' ? this.track.sprintIdx : this.laps * this.track.n;
+    this.mode = opts.mode === 'sprint' ? 'sprint' : 'laps';
+    this.track = Tracks.get(this.mode === 'sprint' ? 'sprint' : 'circuit', opts.trackIndex);
+    this.laps = this.mode === 'sprint' ? 1 : opts.laps;
+    // hedef ilerleme: turda laps × örnek sayısı, sprintte bitiş çizgisinin indeksi
+    this.target = this.mode === 'sprint' ? this.track.finishIdx : this.laps * this.track.n;
     this.diff = DIFFICULTIES[opts.difficulty] || DIFFICULTIES.orta;
     this.state = 'countdown';   // countdown | racing | finishing | done
     this.countdown = 3.5;
@@ -67,7 +68,7 @@ class Race {
       const colorIdx = isPlayer ? o.colorIdx : colors[k % colors.length];
       const row = Math.floor(k / 2), col = k % 2;
       const back = 6 + row * 8 + col * 4;
-      const i = (n - back) % n;
+      const i = t.wrap(t.startIdx - back);
       const lat = (col === 0 ? -1 : 1) * t.half * 0.42;
       const h = t.heading[i];
       const car = {
@@ -76,7 +77,7 @@ class Race {
         x: t.xs[i] + t.nx[i] * lat, y: t.ys[i] + t.ny[i] * lat, angle: h,
         vx: 0, vy: 0, vf: 0, vr: 0, angVel: 0,
         steer: 0, throttle: 0, brake: 0, hand: false,
-        idx: i, lap: -1, lapsDone: 0, progress: -back, lat,
+        idx: i, lap: t.closed ? -1 : 0, lapsDone: 0, progress: t.closed ? -back : i, startProgress: t.closed ? -back : i, lat,
         lapStart: 0, lapTimes: [], bestLap: null, lastLap: null,
         finished: false, finishTime: null, rank: k + 1,
         offroad: false, skid: 0, wrongT: 0, auto: !isPlayer,
@@ -105,7 +106,7 @@ class Race {
     const tab = new Float32Array(n);
     for (let i = 0; i < n; i++) {
       let k = 0;
-      for (let j = -3; j <= 3; j++) k = Math.max(k, Math.abs(t.curv[(i + j + n) % n]));
+      for (let j = -3; j <= 3; j++) k = Math.max(k, Math.abs(t.curv[t.wrap(i + j)]));
       if (k < 1e-5) { tab[i] = m.maxSpeed * 1.2; continue; }
       let lo = 30, hi = m.maxSpeed * 1.2;
       for (let it = 0; it < 20; it++) {
@@ -193,8 +194,8 @@ class Race {
     ai.lane += (ai.laneTarget - ai.lane) * Math.min(1, dt * 1.5);
 
     const look = 4 + Math.floor(Math.max(0, vf) / 45);
-    const j = (car.idx + look) % n;
-    const kAhead = t.curv[(car.idx + look * 2) % n];
+    const j = t.wrap(car.idx + look);
+    const kAhead = t.curv[t.wrap(car.idx + look * 2)];
     const apex = U.clamp(kAhead * 400, -1, 1) * t.half * 0.5;
     const lat = U.clamp(ai.lane * 0.6 + apex, -t.half * 0.75, t.half * 0.75);
     const tx = t.xs[j] + t.nx[j] * lat, ty = t.ys[j] + t.ny[j] * lat;
@@ -209,11 +210,13 @@ class Race {
     let target = m.maxSpeed * car.speedMul;
     const K = Math.min(90, 12 + Math.floor(vf * vf / (2 * dec) / t.spacing));
     for (let k = 1; k <= K; k += 2) {
-      const s = safe[(car.idx + k) % n] * corner;
+      const s = safe[t.wrap(car.idx + k)] * corner;
       const allowed = Math.sqrt(s * s + 2 * dec * k * t.spacing);
       if (allowed < target) target = allowed;
     }
     if (car.offroad) target = Math.min(target, m.maxSpeed * m.offroad);
+    // açık yolda bitişten sonra yavaşla ve dur
+    if (car.finished && !t.closed) target = 0;
 
     if (ai.reverseT > 0) {
       ai.reverseT -= dt;
@@ -228,7 +231,7 @@ class Race {
     }
 
     // sıkışma algılama
-    if (vf < 20 && (this.state === 'racing' || this.state === 'finishing')) {
+    if (vf < 20 && !car.finished && (this.state === 'racing' || this.state === 'finishing')) {
       ai.stuckT += dt;
       if (ai.stuckT > 1.5 && ai.stuckT < 1.6) ai.reverseT = 1.0;
       if (ai.stuckT > 4) { this.respawn(car); ai.stuckT = 0; }
@@ -310,22 +313,35 @@ class Race {
     const t = this.track, n = t.n;
     let best = car.idx, bd = Infinity;
     for (let k = -22; k <= 22; k++) {
-      const j = (car.idx + k + n) % n;
+      const j = t.wrap(car.idx + k);
       const dx = t.xs[j] - car.x, dy = t.ys[j] - car.y;
       const d = dx * dx + dy * dy;
       if (d < bd) { bd = d; best = j; }
     }
     const old = car.idx;
     car.idx = best;
-    const dIdx = best - old;
-    if (dIdx < -n / 2) car.lap++;
-    else if (dIdx > n / 2) car.lap--;
+    if (t.closed) {
+      const dIdx = best - old;
+      if (dIdx < -n / 2) car.lap++;
+      else if (dIdx > n / 2) car.lap--;
+    }
 
-    const dx = car.x - t.xs[best], dy = car.y - t.ys[best];
-    const h = t.heading[best];
+    let dx = car.x - t.xs[best], dy = car.y - t.ys[best];
+    const h = t.heading[best], ch = Math.cos(h), sh = Math.sin(h);
+    let along = dx * ch + dy * sh;
+    // açık yolun iki ucunda kapanış bariyeri
+    if (!t.closed && ((best === 0 && along < 0) || (best === n - 1 && along > 0))) {
+      car.x -= ch * along; car.y -= sh * along;
+      const va = car.vx * ch + car.vy * sh;
+      if (va * along > 0) {
+        car.vx -= ch * va * 1.35; car.vy -= sh * va * 1.35;
+        if (car.isPlayer && Math.abs(va) > 40 && this.hooks.onHit) this.hooks.onHit(Math.min(1, Math.abs(va) / 300));
+      }
+      along = 0;
+      dx = car.x - t.xs[best]; dy = car.y - t.ys[best];
+    }
     car.lat = dx * t.nx[best] + dy * t.ny[best];
-    const along = dx * Math.cos(h) + dy * Math.sin(h);
-    car.progress = car.lap * n + best + along / t.spacing;
+    car.progress = (t.closed ? car.lap * n : 0) + best + along / t.spacing;
     car.offroad = Math.abs(car.lat) > t.half + 4;
 
     // bariyer
@@ -361,7 +377,7 @@ class Race {
         if (this.hooks.onLap) this.hooks.onLap(car);
       }
       // tur yarışında bitiş, son turun sayıldığı anla aynıdır (tur süresi = bitiş süresi)
-      const done = this.mode === 'sprint' ? (car.lap >= 0 && car.progress >= this.target) : car.lap >= this.laps;
+      const done = this.mode === 'sprint' ? car.progress >= this.target : car.lap >= this.laps;
       if (done) this.finishCar(car);
     }
   }
@@ -490,7 +506,7 @@ class Race {
     const list = this.cars.map(c => {
       let t = c.finishTime, est = false;
       if (!c.finished) {
-        const rate = c.progress / Math.max(0.001, time);
+        const rate = (c.progress - c.startProgress) / Math.max(0.001, time);
         if (rate > 0.5) { t = time + (this.target - c.progress) / rate; est = true; }
         else t = null;
       }
