@@ -33,7 +33,12 @@ const Input = (() => {
       const k = el.getAttribute('data-t');
       const on = e => { e.preventDefault(); touch[k] = true; el.classList.add('on'); };
       const off = e => { e.preventDefault(); touch[k] = false; el.classList.remove('on'); };
-      el.addEventListener('pointerdown', on);
+      el.addEventListener('pointerdown', e => {
+        // touch pointers are captured by default; release so a finger can slide onto another button
+        if (el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+        on(e);
+      });
+      el.addEventListener('pointerenter', e => { if (e.pointerType !== 'mouse' || e.buttons) on(e); });
       el.addEventListener('pointerup', off);
       el.addEventListener('pointercancel', off);
       el.addEventListener('pointerleave', off);
@@ -43,6 +48,22 @@ const Input = (() => {
   function on(name, fn) { handlers[name] = fn; }
 
   let padPauseLatch = false;
+
+  /* Gamepad Start button (edge-triggered); also polled while paused, when the game loop is stopped */
+  function pollStart() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let start = false;
+    for (const p of pads) { if (p) { start = !!(p.buttons[9] && p.buttons[9].pressed); break; } }
+    if (start && !padPauseLatch && handlers.pause) handlers.pause('Start');
+    padPauseLatch = start;
+  }
+
+  function hasGamepad() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (const p of pads) if (p) return true;
+    return false;
+  }
+
   function poll(dt) {
     const left = keys.ArrowLeft || keys.KeyA || touch.left;
     const right = keys.ArrowRight || keys.KeyD || touch.right;
@@ -66,11 +87,9 @@ const Input = (() => {
       brake = Math.max(brake, lt > 0.05 ? lt : 0, bBtn ? 1 : 0);
       if (p.buttons[2] && p.buttons[2].pressed) hand = true;
       if (p.buttons[3] && p.buttons[3].pressed) reset = true;
-      const start = p.buttons[9] && p.buttons[9].pressed;
-      if (start && !padPauseLatch && handlers.pause) handlers.pause('Start');
-      padPauseLatch = start;
       break;
     }
+    pollStart();
 
     // smooth keyboard steering
     if (analog) state.steer = target;
@@ -93,5 +112,5 @@ const Input = (() => {
     state.steer = 0;
   }
 
-  return { init, on, poll, clear, state };
+  return { init, on, poll, pollStart, hasGamepad, clear, state };
 })();

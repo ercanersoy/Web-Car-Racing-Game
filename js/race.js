@@ -218,7 +218,12 @@ class Race {
     }
     if (car.offroad) target = Math.min(target, m.maxSpeed * m.offroad);
     // on an open road, slow down and stop after the finish
-    if (car.finished && !t.closed) target = 0;
+    // (braking at standstill would engage reverse, so release the brake once nearly stopped)
+    if (car.finished && !t.closed) {
+      car.throttle = 0;
+      car.brake = vf > 5 ? 1 : 0;
+      return;
+    }
 
     if (ai.reverseT > 0) {
       ai.reverseT -= dt;

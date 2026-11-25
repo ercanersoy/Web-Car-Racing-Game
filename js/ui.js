@@ -4,7 +4,7 @@
 const UI = (() => {
   const SEL_KEY = 'wcrg.newgame.v1';
   const REC_KEY = 'wcrg.records.v1';
-  const VERSION = '1.3.0';
+  const VERSION = '1.3.1';
   const screens = ['main', 'new', 'settings', 'about', 'pause', 'results'];
   let current = 'main';
   let settingsBack = 'main';
@@ -95,7 +95,14 @@ const UI = (() => {
   }
 
   /* ---------- records ---------- */
-  function records() { return U.load(REC_KEY, {}); }
+  /* Stored records; anything that is not a finite time is ignored */
+  function records() {
+    const r = U.load(REC_KEY, {}), out = {};
+    if (r && typeof r === 'object' && !Array.isArray(r)) {
+      for (const k in r) if (typeof r[k] === 'number' && isFinite(r[k]) && r[k] > 0) out[k] = r[k];
+    }
+    return out;
+  }
   /* lap race: map + lap count; sprint: sprint map */
   function recKey(o) { return o.mode === 'sprint' ? 's' + o.trackIndex : 'c' + o.trackIndex + ':' + o.laps; }
   function saveRecord(o, result) {

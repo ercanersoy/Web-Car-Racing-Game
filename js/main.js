@@ -10,6 +10,12 @@ const Game = (() => {
   let fpsCount = 0, fpsTime = 0, fps = 0;
   const cam = { x: 0, y: 0, rot: 0, zoom: 1 };
   let menuMusicOn = false;
+  let padTimer = 0;   // polls the gamepad Start button while paused
+
+  function watchPad(on) {
+    if (padTimer) { clearInterval(padTimer); padTimer = 0; }
+    if (on && Input.hasGamepad()) padTimer = setInterval(Input.pollStart, 100);
+  }
 
   function init() {
     // language: pick from the browser language on first run; default unit is mph for US English
@@ -100,6 +106,7 @@ const Game = (() => {
 
   function start(o) {
     opts = Object.assign({}, o, { effects: effectsLevel(), playerName: Settings.get('playerName') || '' });
+    watchPad(false);
     stopLoop();
     Sound.stopMusic();
     Sound.engineStop();
@@ -158,12 +165,14 @@ const Game = (() => {
   function pause() {
     paused = true;
     stopLoop();            // no frames are drawn while paused (saves resources)
+    watchPad(true);
     Input.clear();
     Sound.suspend();
     UI.show('pause');
   }
   function resume() {
     paused = false;
+    watchPad(false);
     UI.hideAll();
     Sound.resume();
     lastT = performance.now();
@@ -173,6 +182,7 @@ const Game = (() => {
   }
   function quit() {
     running = false; paused = false;
+    watchPad(false);
     stopLoop();
     Sound.engineStop();
     Sound.resume();
