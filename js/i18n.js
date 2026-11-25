@@ -38,7 +38,7 @@ const I18N = (() => {
 
     'stat.speed': 'Azami hız', 'stat.accel': 'Hızlanma', 'stat.handling': 'Yol tutuş',
     'stat.durability': 'Dayanıklılık', 'stat.offroad': 'Arazi',
-    'car.0.tag': 'Dengeli', 'car.0.desc': 'Her pistte güvenilir, dengeli bir spor coupe.',
+    'car.0.tag': 'Dengeli', 'car.0.desc': 'Her pistte güvenilir, dengeli bir spor kupe.',
     'car.1.tag': 'Yüksek hız', 'car.1.desc': 'Uzun düzlüklerin kralı; virajlarda dikkat ister.',
     'car.2.tag': 'Yol tutuş', 'car.2.desc': 'Keskin virajlarda rakipsiz yol tutuşu sunan roadster.',
     'car.3.tag': 'Dayanıklı', 'car.3.desc': 'Ağır ve sağlam arazi aracı; çarpışmalardan ve çimden az etkilenir.',
@@ -111,7 +111,7 @@ const I18N = (() => {
     'res.timeTrial': 'Zamana karşı',
     'res.dnf': 'Bitiremedi',
     'res.trackRecord': 'Bu harita/mod rekoru: <b>{t}</b>',
-    'res.trackLap': 'Harita en iyi tur: <b>{t}</b>',
+    'res.trackLap': 'Haritadaki en iyi tur: <b>{t}</b>',
     'res.newRecord': 'YENİ REKOR!',
     'res.new': 'YENİ!',
     'res.estNote': '~ işaretli süreler tahminidir (yarışı bitirmeden önce hesaplandı).',

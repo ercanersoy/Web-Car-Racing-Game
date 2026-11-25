@@ -236,10 +236,12 @@ const Game = (() => {
     acc += dt;
     while (acc >= STEP) {
       const inp = Input.poll(STEP);
+      if (paused) break;                     // paused from inside poll() (gamepad Start)
       race.update(STEP, inp);
       acc -= STEP;
       if (race.state === 'done') break;
     }
+    if (paused) return;
     if (race.state === 'done') { acc = 0; }
     updateCamera(dt);
     draw(dt);

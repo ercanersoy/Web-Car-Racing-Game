@@ -109,6 +109,7 @@ const Input = (() => {
   function clear() {
     for (const k in keys) keys[k] = false;
     for (const k in touch) touch[k] = false;
+    document.querySelectorAll('#touch [data-t].on').forEach(el => el.classList.remove('on'));
     state.steer = 0;
   }
 

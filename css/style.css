@@ -158,7 +158,7 @@ h3 small { text-transform: none; letter-spacing: 0; color: var(--text); font-wei
 .opt label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 .opt label b { color: var(--text); }
 .opt small { display: block; color: var(--muted); margin-top: 5px; font-size: 12px; }
-input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=range] { width: 100%; margin: 4px 0; accent-color: var(--accent); }
 
 .car-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .car-card, .map-card {
@@ -337,4 +337,6 @@ kbd {
   #touch .t-right { right: 10px; bottom: 140px; }
   #touch button { width: 64px; height: 64px; }
   .results th:nth-child(3), .results td:nth-child(3), .results th:nth-child(6), .results td:nth-child(6) { display: none; }
+  .set-row select, .set-row input[type=text] { min-width: 0; max-width: 58%; }
+  .set-row input[type=range] { width: 45%; }
 }
